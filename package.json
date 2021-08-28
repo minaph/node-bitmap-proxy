@@ -1,8 +1,5 @@
 {
-<<<<<<< HEAD
-=======
   "scripts": {"start": "ts-node src/proxy.ts"},
->>>>>>> bc90f7c1446f1aee75c2cf3b3ab0622645d6bfd9
   "devDependencies": {
     "@types/node": "^16.7.4",
     "@types/node-fetch": "^2.5.12",
