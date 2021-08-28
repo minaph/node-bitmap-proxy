@@ -1,4 +1,5 @@
 {
+  "scripts": {"start": "ts-node src/proxy.ts"},
   "devDependencies": {
     "@types/node": "^16.7.4",
     "@types/node-fetch": "^2.5.12",
