@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "start": "ts-node src/proxy.ts"
+    "start": "ts-node src/proxy.ts",
+    "glitch:reload": "git pull origin main && refresh",
+    "local:push": "git push glitch main"
   },
   "engines": {
     "node": "14.x"
