@@ -10,12 +10,15 @@ const port = 3000;
 const server = http.createServer(async (req, res) => {
   // const url_parse = new URL(req.url!);
   // const queryUrl = url_parse.searchParams.get("url");
-  const queryUrl = req.url!.split("?url=")[1];
+  let queryUrl = req.url!.split("?url=")[1];
   console.log({ queryUrl });
   if (queryUrl) {
     let response: Response;
+    if (!queryUrl.startsWith("http")) {
+      queryUrl = "http://" + queryUrl;
+    }
     try {
-      response = await fetch(queryUrl!);
+      response = await fetch(queryUrl);
     } catch (e) {
       badRequest(res);
       return;
