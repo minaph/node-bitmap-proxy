@@ -11,7 +11,10 @@ const port = 3000;
 const cors_anywhere = createServer();
 
 const server = http.createServer(function (req, res) {
-  var originalWrite = res.write;
+  const originalWrite = res.write;
+  const originalEnd = res.end;
+  const buffers: (Buffer | string)[] = [];
+
 
   res.write = function (
     this: http.ServerResponse,
@@ -19,13 +22,36 @@ const server = http.createServer(function (req, res) {
     encoding: BufferEncoding,
     callback?: (error: Error | null | undefined) => void
   ) {
-    if (Buffer.isBuffer(data)) {
-      data = data.toString();
+    assert.ok(Buffer.isBuffer(data) || typeof data === 'string');
+
+    buffers.push(data);
+    if (callback) {
+      process.nextTick(callback, null);
+    }
+  } as any;
+
+
+  res.end = function (
+    this: http.ServerResponse,
+    data: Buffer | string,
+    encoding: BufferEncoding,
+    callback?: () => void
+  ) {
+    if (data) {
+      this.write(data, encoding);
     }
 
-    assert.strictEqual(typeof data, "string");
+    // After calling .end(), .write shouldn't be called any more. So let's
+    // restore it so that the default error handling for writing to closed
+    // streams would occur.
+    this.write = originalWrite;
 
-    const body = data;
+    // Combine all chunks. Note that we're assuming that all chunks are
+    // utf8 strings or buffers whose content is utf8-encoded. If this
+    // assumption is not true, then you have to update the .write method
+    // above.
+
+    const body = buffers.join('');
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "image/bmp");
@@ -37,11 +63,17 @@ const server = http.createServer(function (req, res) {
       data: result.getLittleEndian(),
     });
 
-    return originalWrite.call(this, data, encoding, callback);
+    // .end should be called once, so let's restore it so that any default
+    // error handling occurs if it occurs again.
+    this.end = originalEnd as any;
+    this.end(result, 'utf8', callback);
   } as any;
+
 
   cors_anywhere.emit("request", req, res);
 });
+
+
 
 // const server = http.createServer(async (req, res) => {
 // const urlPattern = /\?url=(.*?)(?:\.png|\.jpe?g)?$/;
