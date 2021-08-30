@@ -1,7 +1,7 @@
 import http from "http";
 import { Bitmap } from "./bitmap";
 import { Buffer } from "buffer";
-
+/// <reference path="./cors-anywhere.d.ts"/>
 import { createServer } from "cors-anywhere";
 import assert from "assert";
 
