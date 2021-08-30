@@ -1,5 +1,6 @@
 declare module 'cors-anywhere' {
   import { Server } from 'http';
+  import { createServer } from "cors-anywhere";
 
   export function createServer(options?: Partial<{
     /**
