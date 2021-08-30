@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "ts-node src/proxy.ts",
+    "start": "ts-node src/proxy-working.ts",
     "glitch:reload": "git pull origin main && refresh",
     "local:push": "git push glitch main"
   },
@@ -25,6 +25,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "cors-anywhere": "^0.4.4",
     "node-fetch": "^2.6.1"
   }
 }
