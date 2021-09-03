@@ -65,22 +65,22 @@ class BitmapInfoHeader {
   }
 }
 
-class BitmapData extends Array {
-  constructor(data: any) {
-    super(data);
-  }
-}
+// class BitmapData extends Array {
+//   constructor(data: any) {
+//     super(data);
+//   }
+// }
 
 export class Bitmap {
   bitmapFileHeader: BitmapFileHeader;
   bitmapInfoHeader: BitmapInfoHeader;
 
-  bitmapData: BitmapData;
+  bitmapData: Uint8Array;
 
   constructor(width: number, height: number) {
     this.bitmapFileHeader = new BitmapFileHeader(width * height * 3 + 54, 54);
     this.bitmapInfoHeader = new BitmapInfoHeader(width, height);
-    this.bitmapData = new BitmapData(Array(width * height * 3).fill(0));
+    this.bitmapData = new Uint8Array(Array(width * height * 3).fill(0));
   }
 
   getLittleEndian() {
@@ -97,8 +97,20 @@ export class Bitmap {
     return new Uint8Array(arr);
   }
 
-  setBitmapData(data: any) {
+  private setData(data: Uint8Array) {
     this.bitmapData = data;
+  }
+
+  static fromUint8Array(data: Uint8Array) {
+    const width = 200;
+    const height = Math.ceil(data.length / (width * 3));
+    const space = width * height * 3 - data.length;
+    console.log({ data: data.length, width, height, space });
+    const bitmap = new Bitmap(width, height);
+
+    bitmap.setData(new Uint8Array([...data, ...Array(space).fill(0)]));
+    console.log({bitmap})
+    return bitmap;
   }
 
   toString() {
@@ -106,22 +118,14 @@ export class Bitmap {
     // return Utilities.newBlob("")
     //   .setBytes(this.getLittleEndian())
     //   .getDataAsString();
-    return new TextDecoder("utf-8").decode(
-      this.getLittleEndian()
-    );
+    return new TextDecoder("utf-8").decode(this.getLittleEndian());
     // return this.getLittleEndian().map((x) => String.fromCharCode(x)).join("");
   }
 
   static fromString(str: string) {
     // const data = Utilities.newBlob("").setDataFromString(str).getBytes();
-    const data = new TextEncoder().encode(str);
-    const width = 200;
-    const height = Math.ceil(data.length / (width * 3));
-    const space = width * height * 3 - data.length;
-    console.log({ data: data.length, width, height, space });
 
-    const bitmap = new Bitmap(width, height);
-    bitmap.setBitmapData([...data, ...Array(space).fill(0)]);
-    return bitmap;
+    const data = new TextEncoder().encode(str);
+    return Bitmap.fromUint8Array(data);
   }
 }
