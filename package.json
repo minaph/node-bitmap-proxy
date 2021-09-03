@@ -1,8 +1,10 @@
 {
   "scripts": {
-    "start": "ts-node src/proxy-working.ts",
+    "start": "ts-node --files src/proxy-working.ts",
     "glitch:reload": "git pull origin main && refresh",
-    "local:push": "git push glitch main"
+    "local:push": "git push glitch main",
+    "tsc:debug": "tsc --traceResolution > trace.txt && code trace.txt",
+    "tsc:declare": "tsc --declaration --emitDeclarationOnly --outDir dist/declarations --allowJs"
   },
   "engines": {
     "node": "14.x"
@@ -20,12 +22,13 @@
   },
   "name": "node-bitmap-proxy",
   "version": "1.0.0",
-  "main": "./src/proxy",
+  "main": "./src/proxy-working",
   "author": "Yuki Minoh",
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "cors-anywhere": "^0.4.4",
-    "node-fetch": "^2.6.1"
+    "http-proxy": "^1.18.1",
+    "node-fetch": "^2.6.1",
+    "proxy-from-env": "^1.1.0"
   }
 }
