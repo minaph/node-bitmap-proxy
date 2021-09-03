@@ -1,108 +1,99 @@
-import http from "http";
-import { Bitmap } from "./bitmap";
-import { Buffer } from "buffer";
-/// <reference path="./cors-anywhere.d.ts"/>
-import { createServer } from "cors-anywhere";
-import assert from "assert";
+import http, { ServerResponse } from "http";
+import { Stream } from "stream";
+import url from "url";
+import { gzipSync } from "zlib";
+
+/// <reference path="./@types/cors-anywhere.d.ts" />
+import { createServer, withCORS } from "../lib/cors-anywhere.js";
+import BitmapDuplex from "./BitmapDuplex";
+
+import fs from "fs";
+
+console.log(typeof withCORS, withCORS);
 
 const hostname = "127.0.0.1";
 const port = 3000;
 
-const cors_anywhere = createServer();
-
-const server = http.createServer(function (req, res) {
-  const originalWrite = res.write;
-  const originalEnd = res.end;
-  const buffers: (Buffer | string)[] = [];
-
-
-  res.write = function (
-    this: http.ServerResponse,
-    data: Buffer | string,
-    encoding: BufferEncoding,
-    callback?: (error: Error | null | undefined) => void
-  ) {
-    assert.ok(Buffer.isBuffer(data) || typeof data === 'string');
-
-    buffers.push(data);
-    if (callback) {
-      process.nextTick(callback, null);
+const cors_anywhere = createServer({
+  handleInitialRequest: (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    _a: url.UrlWithParsedQuery
+  ) => {
+    const flag = req.headers["sec-fetch-dest"] === "image";
+    if (flag) {
+      start(req, res);
     }
-  } as any;
-
-
-  res.end = function (
-    this: http.ServerResponse,
-    data: Buffer | string,
-    encoding: BufferEncoding,
-    callback?: () => void
-  ) {
-    if (data) {
-      this.write(data, encoding);
-    }
-
-    // After calling .end(), .write shouldn't be called any more. So let's
-    // restore it so that the default error handling for writing to closed
-    // streams would occur.
-    this.write = originalWrite;
-
-    // Combine all chunks. Note that we're assuming that all chunks are
-    // utf8 strings or buffers whose content is utf8-encoded. If this
-    // assumption is not true, then you have to update the .write method
-    // above.
-
-    const body = buffers.join('');
-
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "image/bmp");
-    const result = Bitmap.fromString(body);
-
-    console.log({
-      result,
-      length: result.toString().length,
-      data: result.getLittleEndian(),
-    });
-
-    // .end should be called once, so let's restore it so that any default
-    // error handling occurs if it occurs again.
-    this.end = originalEnd as any;
-    this.end(result, 'utf8', callback);
-  } as any;
-
-
-  cors_anywhere.emit("request", req, res);
+    return flag;
+  },
 });
 
-
-
-// const server = http.createServer(async (req, res) => {
-// const urlPattern = /\?url=(.*?)(?:\.png|\.jpe?g)?$/;
-// const queryUrlMatch = req.url!.match(urlPattern);
-// console.log({ queryUrlMatch });
-// if (queryUrlMatch) {
-// let queryUrl = queryUrlMatch[1];
-// let response: Response;
-// if (!queryUrl.startsWith("http")) {
-//   queryUrl = "http://" + queryUrl;
-// }
-// try {
-//   response = await fetch(queryUrl);
-// } catch (e) {
-//   badRequest(res);
-//   return;
-// }
-//   res.end(Buffer.from(result.getLittleEndian().buffer));
-// } else {
-//   badRequest(res);
-// }
-// });
-
-// function badRequest(res: http.ServerResponse) {
-//   res.statusCode = 400;
-//   res.setHeader("Content-Type", "text/plain");
-//   res.end("Bad request");
-// }
-
-server.listen(port, hostname, () => {
+cors_anywhere.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });
+
+function start(
+  req: http.IncomingMessage,
+  originalRes: http.ServerResponse & { headers?: http.OutgoingHttpHeaders }
+) {
+  const cors_anywhere_internal = createServer({});
+
+  const res = new BitmapDuplex(originalRes, {
+    allowHalfOpen: true,
+  });
+
+  const originalDetachSocket = ServerResponse.prototype.detachSocket;
+
+  ServerResponse.prototype.detachSocket = function (socket: any) {
+    console.log(socket);
+    // debugger;
+    originalDetachSocket.call(this, socket);
+    // this.emit("close");
+  };
+
+  [res, originalRes].forEach((r) => handleError(r, originalRes));
+
+  cors_anywhere_internal.emit("request", req, res);
+
+  res.on("pipe", (_: NodeJS.ReadableStream) => {
+    console.log("pipe!");
+
+    originalRes.headers = {};
+    // originalRes.headers = res.headers;
+    originalRes.statusCode = 200;
+    originalRes.setHeader("Content-Type", "image/bmp");
+    originalRes.setHeader("Content-Encoding", "gzip");
+    try {
+      withCORS(originalRes.headers!, req);
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  res.on("finish", () => {
+    // res.pipe(originalRes);
+    res.on("data", (chunk: Buffer | null) => {
+      console.log("data!", chunk?.byteLength);
+      originalRes.setHeader("Content-Length", chunk?.byteLength!);
+
+      originalRes.write(gzipSync(chunk!));
+
+      const str = fs.createWriteStream("./test/test.bmp");
+      str.write(gzipSync(chunk!));
+
+      str.end();
+    });
+    res.on("end", () => {
+      console.log("end!");
+      originalRes.end();
+    });
+  });
+}
+
+function handleError(stream: Stream, res: http.ServerResponse) {
+  stream.on("error", (error) => {
+    console.log(`${error}`);
+    res.statusCode = 500;
+    res.end("500 error");
+  });
+}
