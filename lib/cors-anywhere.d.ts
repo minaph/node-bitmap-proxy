@@ -1,8 +1,20 @@
-declare module 'cors-anywhere' {
-  import { Server } from 'http';
-  import { createServer } from "cors-anywhere";
+// declare module "cors-anywhere" {
+import http, {
+  Server,
+  OutgoingHttpHeaders,
+  ServerResponse,
+  IncomingMessage,
+} from "http";
+import { createServer, withCORS } from "./cors-anywhere";
+import url from "url";
 
-  export function createServer(options?: Partial<{
+declare function withCORS(
+  headers: OutgoingHttpHeaders,
+  request: IncomingMessage
+): OutgoingHttpHeaders;
+
+declare function createServer(
+  options?: Partial<{
     /**
      * If set, specifies which intermediate proxy to use for a given URL. If the return
      * value is void, a direct request is sent. The default implementation is
@@ -56,7 +68,7 @@ declare module 'cors-anywhere' {
     /**
      * Set headers for the request (overwrites existing ones).
      */
-    setHeaders: {[key: string]: string};
+    setHeaders: { [key: string]: string };
 
     /**
      * If set, an Access-Control-Max-Age header with this value (in seconds) will be added.
@@ -79,5 +91,12 @@ declare module 'cors-anywhere' {
      * `https.createServer` method.
      */
     httpsOptions: object;
-  }>): Server;
-}
+
+    handleInitialRequest: (
+      req: http.IncomingMessage,
+      res: http.ServerResponse,
+      url: url.UrlWithParsedQuery
+    ) => boolean;
+  }>
+): Server;
+// }
