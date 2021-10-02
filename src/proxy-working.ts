@@ -1,4 +1,4 @@
-import http, { ServerResponse } from "http";
+import http from "http";
 import { Stream } from "stream";
 import url from "url";
 import { gzipSync } from "zlib";
@@ -22,6 +22,7 @@ const cors_anywhere = createServer({
   ) => {
     const flag = req.headers["sec-fetch-dest"] === "image";
     if (flag) {
+      console.log("image request", req.headers);
       start(req, res);
     }
     return flag;
@@ -42,29 +43,19 @@ function start(
     allowHalfOpen: true,
   });
 
-  const originalDetachSocket = ServerResponse.prototype.detachSocket;
 
-  ServerResponse.prototype.detachSocket = function (socket: any) {
-    console.log(socket);
-    // debugger;
-    originalDetachSocket.call(this, socket);
-    // this.emit("close");
-  };
-
-  [res, originalRes].forEach((r) => handleError(r, originalRes));
+  [res, originalRes].forEach((r) => attachErrorHandler(r, originalRes));
 
   cors_anywhere_internal.emit("request", req, res);
 
   res.on("pipe", (_: NodeJS.ReadableStream) => {
     console.log("pipe!");
 
-    originalRes.headers = {};
     // originalRes.headers = res.headers;
-    originalRes.statusCode = 200;
-    originalRes.setHeader("Content-Type", "image/bmp");
-    originalRes.setHeader("Content-Encoding", "gzip");
+    originalRes.headers = {};
     try {
-      withCORS(originalRes.headers!, req);
+      originalRes.headers = withCORS(originalRes.headers!, req);
+      console.log("headers", originalRes.headers);
     } catch (error) {
       console.log(error);
     }
@@ -74,14 +65,22 @@ function start(
     // res.pipe(originalRes);
     res.on("data", (chunk: Buffer | null) => {
       console.log("data!", chunk?.byteLength);
-      originalRes.setHeader("Content-Length", chunk?.byteLength!);
-
-      originalRes.write(gzipSync(chunk!));
 
       const str = fs.createWriteStream("./test/test.bmp");
       str.write(gzipSync(chunk!));
-
       str.end();
+
+      if (!originalRes.headersSent) {
+        originalRes.statusCode = 200;
+        originalRes.setHeader("Content-Type", "image/bmp");
+        originalRes.setHeader("Content-Encoding", "gzip");
+        originalRes.setHeader("Content-Length", chunk?.byteLength!);
+        Object.entries(originalRes.headers!).forEach(([key, value]) => {
+          originalRes.setHeader(key, value!);
+        });
+
+        originalRes.write(gzipSync(chunk!));
+      }
     });
     res.on("end", () => {
       console.log("end!");
@@ -90,7 +89,7 @@ function start(
   });
 }
 
-function handleError(stream: Stream, res: http.ServerResponse) {
+function attachErrorHandler(stream: Stream, res: http.ServerResponse) {
   stream.on("error", (error) => {
     console.log(`${error}`);
     res.statusCode = 500;

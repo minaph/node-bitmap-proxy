@@ -65,11 +65,6 @@ class BitmapInfoHeader {
   }
 }
 
-// class BitmapData extends Array {
-//   constructor(data: any) {
-//     super(data);
-//   }
-// }
 
 export class Bitmap {
   bitmapFileHeader: BitmapFileHeader;
@@ -114,17 +109,10 @@ export class Bitmap {
   }
 
   toString() {
-    // Logger.log(this.getLittleEndian());
-    // return Utilities.newBlob("")
-    //   .setBytes(this.getLittleEndian())
-    //   .getDataAsString();
     return new TextDecoder("utf-8").decode(this.getLittleEndian());
-    // return this.getLittleEndian().map((x) => String.fromCharCode(x)).join("");
   }
 
   static fromString(str: string) {
-    // const data = Utilities.newBlob("").setDataFromString(str).getBytes();
-
     const data = new TextEncoder().encode(str);
     return Bitmap.fromUint8Array(data);
   }
