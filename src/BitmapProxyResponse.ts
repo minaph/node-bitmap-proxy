@@ -1,10 +1,10 @@
 
 
-export interface BitmapProxyResponse {
+export interface ProxyTargetResponse {
   headers: JSONObject;
   status: number;
   statusText: string;
-  body: string[];
+  body: string[] | string;
 }
 
 
