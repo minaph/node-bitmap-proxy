@@ -1,10 +1,10 @@
 {
   "scripts": {
-    "start": "ts-node --files src/proxy-working.ts",
+    "start": "node dist/proxy-main.ts",
     "glitch:reload": "git pull origin main && refresh",
     "local:push": "git push glitch main",
-    "tsc:debug": "tsc --traceResolution > trace.txt && code trace.txt",
-    "tsc:declare": "tsc --declaration --emitDeclarationOnly --outDir dist/declarations --allowJs"
+    "tsc:declare": "tsc --declaration --emitDeclarationOnly --outDir dist/declarations --allowJs",
+    "localhost": "ts-node --files src/proxy-main.ts"
   },
   "engines": {
     "node": "14.x"
