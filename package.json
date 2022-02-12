@@ -23,7 +23,7 @@
   },
   "name": "node-bitmap-proxy",
   "version": "1.0.0",
-  "main": "./src/proxy-working",
+  "main": "./src/proxy-main.ts",
   "author": "Yuki Minoh",
   "license": "MIT",
   "private": true,
