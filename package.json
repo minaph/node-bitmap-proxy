@@ -31,5 +31,8 @@
     "http-proxy": "^1.18.1",
     "node-fetch": "^2.6.1",
     "proxy-from-env": "^1.1.0"
+  },
+  "volta": {
+    "node": "14.19.1"
   }
 }

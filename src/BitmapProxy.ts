@@ -102,10 +102,13 @@ export class BitmapProxy {
     query: url.UrlWithParsedQuery
   ) {
     const overwriteHeader = withCORS({}, req);
-    const fake = new ResponseReportWriter();
-    BitmapContentSender.pipe(fake, res, overwriteHeader);
+    const wrappedResponse = new ResponseReportWriter();
+    BitmapContentSender.pipe(wrappedResponse, res, overwriteHeader);
 
     // start the proxy
-    this.cors_anywhere_internal.emit("request", req, fake);
+    this.cors_anywhere_internal.emit("request", req, wrappedResponse);
+
+    // Todo: Callback Architectureにする
+    // this.callback(req, res, query);
   }
 }

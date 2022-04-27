@@ -1,4 +1,4 @@
-import { OutgoingHttpHeader, OutgoingHttpHeaders, ServerResponse } from "http";
+import { IncomingMessage, OutgoingHttpHeader, OutgoingHttpHeaders, ServerResponse } from "http";
 import { Bitmap } from "./bitmap";
 import zlib from "zlib";
 import { Writable, WritableOptions, PipelineCallback, Readable } from "stream";
@@ -316,4 +316,16 @@ export class BitmapContentSender extends BitmapEmbedder {
     // console.log("sending", { byteLength: data.byteLength });
     // response.end(data);
   }
+}
+
+
+class BitmappableResponse extends ServerResponse {
+  constructor(
+    response: IncomingMessage,
+    private readonly headers: OutgoingHttpHeaders,
+  ) {
+    super(response);
+  }
+
+ 
 }
