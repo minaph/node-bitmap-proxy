@@ -24,8 +24,8 @@ export class BitmapProxy {
   constructor(readonly options?: BitmapProxyOptions) {
     this.cors_anywhere = createServer({
       handleInitialRequest: this.handleRequest.bind(this),
-      originWhitelist: options?.whiteList || [],
-      originBlacklist: options?.blackList || [],
+      originWhitelist: options?.whiteList,
+      originBlacklist: options?.blackList ?? [],
       redirectSameOrigin: true,
       removeHeaders: ["cookie", "cookie2"],
       requireHeader: ["origin", "sec-fetch-dest"],
