@@ -71,7 +71,7 @@ export class BitmapProxy {
     res: http.ServerResponse,
     query: url.UrlWithParsedQuery
   ) {
-    if(this.denyHttp && query.protocol === "http:") {
+    if(this.denyHttp && query && query.protocol === "http:") {
       return false;
     }
     if (req.headers["sec-fetch-dest"] === "image") {
