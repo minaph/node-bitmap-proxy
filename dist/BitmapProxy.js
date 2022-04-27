@@ -7,7 +7,7 @@ const BitmapEmbedder_1 = require("./BitmapEmbedder");
 class BitmapProxy {
     constructor(options) {
         this.options = options;
-        this.cors_anywhere = cors_anywhere_js_1.createServer({
+        this.cors_anywhere = (0, cors_anywhere_js_1.createServer)({
             handleInitialRequest: this.handleRequest.bind(this),
             originWhitelist: options?.whiteList,
             originBlacklist: options?.blackList,
@@ -18,7 +18,7 @@ class BitmapProxy {
                 "x-powered-by": "bitmap-proxy",
             },
         });
-        this.cors_anywhere_internal = cors_anywhere_js_1.createServer({});
+        this.cors_anywhere_internal = (0, cors_anywhere_js_1.createServer)({});
     }
     get host() {
         return this.options?.host ?? "127.0.0.1";
@@ -65,11 +65,13 @@ class BitmapProxy {
         return flag;
     }
     internal(req, res, query) {
-        const overwriteHeader = cors_anywhere_js_1.withCORS({}, req);
-        const fake = new BitmapEmbedder_1.ResponseReportWriter();
-        BitmapEmbedder_1.BitmapContentSender.pipe(fake, res, overwriteHeader);
+        const overwriteHeader = (0, cors_anywhere_js_1.withCORS)({}, req);
+        const wrappedResponse = new BitmapEmbedder_1.ResponseReportWriter();
+        BitmapEmbedder_1.BitmapContentSender.pipe(wrappedResponse, res, overwriteHeader);
         // start the proxy
-        this.cors_anywhere_internal.emit("request", req, fake);
+        this.cors_anywhere_internal.emit("request", req, wrappedResponse);
+        // Todo: Callback Architectureにする
+        // this.callback(req, res, query);
     }
 }
 exports.BitmapProxy = BitmapProxy;

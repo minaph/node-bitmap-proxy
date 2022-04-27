@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BitmapContentSender = exports.BitmapEmbedder = exports.ResponseReportWriter = void 0;
+const http_1 = require("http");
 const bitmap_1 = require("./bitmap");
 const zlib_1 = __importDefault(require("zlib"));
 const stream_1 = require("stream");
@@ -230,7 +231,7 @@ class BitmapContentSender extends BitmapEmbedder {
                 response.setHeader(key, value);
             });
         // response.writeProcessing();
-        const gzip = zlib_2.createGzip();
+        const gzip = (0, zlib_2.createGzip)();
         stream_1.Readable.from([this.bitmap.getLittleEndian()]).pipe(gzip).pipe(response);
         // const data = gzipSync(this.bitmap!.getLittleEndian());
         // console.log("sending", { byteLength: data.byteLength });
@@ -238,3 +239,9 @@ class BitmapContentSender extends BitmapEmbedder {
     }
 }
 exports.BitmapContentSender = BitmapContentSender;
+class BitmappableResponse extends http_1.ServerResponse {
+    constructor(response, headers) {
+        super(response);
+        this.headers = headers;
+    }
+}
