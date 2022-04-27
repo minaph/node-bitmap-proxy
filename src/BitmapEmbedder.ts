@@ -320,17 +320,18 @@ export class BitmapContentSender extends BitmapEmbedder {
 
         // response.writeProcessing();
 
-        const gzip = createGzip();
-        const gzipped = Readable.from([this.bitmap!.getLittleEndian()]).pipe(
-            gzip
-        );
-        response.setHeader("Content-Length", gzipped.readableLength);
+        // const gzip = createGzip();
+        // const gzipped = Readable.from([this.bitmap!.getLittleEndian()]).pipe(
+        //     gzip
+        // );
+        // response.setHeader("Content-Length", gzipped.readableLength);
 
-        gzipped.pipe(response);
+        // gzipped.pipe(response);
 
-        // const data = gzipSync(this.bitmap!.getLittleEndian());
-        // console.log("sending", { byteLength: data.byteLength });
-        // response.end(data);
+        const data = gzipSync(this.bitmap!.getLittleEndian());
+        console.log("sending", { byteLength: data.byteLength });
+        response.setHeader("Content-Length", data.byteLength);
+        response.end(data);
     }
 }
 
