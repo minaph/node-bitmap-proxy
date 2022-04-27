@@ -1,10 +1,10 @@
 {
   "scripts": {
-    "start": "ts-node --files src/proxy-working.ts",
+    "start": "node dist/proxy-main.ts",
     "glitch:reload": "git pull origin main && refresh",
     "local:push": "git push glitch main",
-    "tsc:debug": "tsc --traceResolution > trace.txt && code trace.txt",
-    "tsc:declare": "tsc --declaration --emitDeclarationOnly --outDir dist/declarations --allowJs"
+    "tsc:declare": "tsc --declaration --emitDeclarationOnly --outDir dist/declarations --allowJs",
+    "localhost": "ts-node --files src/proxy-main.ts"
   },
   "engines": {
     "node": "14.x"
@@ -18,11 +18,12 @@
     "eslint-config-prettier": "^8.3.0",
     "prettier": "^2.3.2",
     "ts-node": "^10.2.1",
+    "typedoc": "^0.22.4",
     "typescript": "^4.4.2"
   },
   "name": "node-bitmap-proxy",
   "version": "1.0.0",
-  "main": "./src/proxy-working",
+  "main": "./src/proxy-main.ts",
   "author": "Yuki Minoh",
   "license": "MIT",
   "private": true,
@@ -30,5 +31,8 @@
     "http-proxy": "^1.18.1",
     "node-fetch": "^2.6.1",
     "proxy-from-env": "^1.1.0"
+  },
+  "volta": {
+    "node": "14.19.1"
   }
 }
