@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "node dist/proxy-main",
-    "glitch:reload": "git pull origin main && refresh",
+    "glitch:reload": "git pull origin main && tsc && refresh",
     "local:push": "git push glitch main",
     "tsc:declare": "tsc --declaration --emitDeclarationOnly --outDir dist/declarations --allowJs",
     "localhost": "ts-node --files src/proxy-main.ts"
