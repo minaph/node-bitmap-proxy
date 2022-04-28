@@ -77,6 +77,9 @@ export class BitmapProxy {
     if (req.headers["sec-fetch-dest"] === "image") {
       return true;
     };
+    if (req.headers["referer"] === "https://scrapbox.io/") {
+      return true;
+    }
     if (this.cors_anywhere_enabled) {
       return true;
     }
