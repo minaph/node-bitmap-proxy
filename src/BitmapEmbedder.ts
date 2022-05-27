@@ -189,6 +189,7 @@ interface ReportWriter extends Writable {
 }
 
 /** Implementation of ReportWriter */
+// Duplexだとデータの保留がだるいからWritableにした
 export class ResponseReportWriter
     extends AbridgedResponse
     implements ReportWriter
@@ -267,6 +268,9 @@ export class BitmapEmbedder {
     }
 }
 
+/** Send response to the client
+ * manage whole transfer process */
+// これ，マネジャーを作るのではなく，変換オブジェクトとして定義したほうが利便性が高い
 export class BitmapContentSender extends BitmapEmbedder {
     static pipe(
         source: ReportWriter,

@@ -27,24 +27,24 @@ async function fetch(
   input: string | Request,
   init?: RequestInit
 ): Promise<Response> {
+  console.time("fetch");
   const endpoint = "http://localhost:3000/";
 
   // listed in the same order as in the specifications.
   // see https://fetch.spec.whatwg.org/#ref-for-dom-request%E2%91%A0
   const {
     url,
-
-    method,
-    headers,
-    body,
-    referrer,
-    referrerPolicy,
-    mode,
-    credentials,
-    cache,
-    redirect,
-    integrity,
-    keepalive,
+    // method,
+    // headers,
+    // body,
+    // referrer,
+    // referrerPolicy,
+    // mode,
+    // credentials,
+    // cache,
+    // redirect,
+    // integrity,
+    // keepalive,
     signal,
     // window,
   } = new Request(input, init);
@@ -65,11 +65,15 @@ async function fetch(
       throw new DOMException("Aborted", "AbortError");
     });
 
+    console.timeLog("fetch", "setup");
+
     // img setup & load
     const img = document.createElement("img");
     img.crossOrigin = "Anonymous";
     img.src = endpoint + requestUrl.href;
     await img.decode();
+
+    console.timeLog("fetch", "image decode");
 
     // canvas setup
     const canvas = document.createElement("canvas");
@@ -92,22 +96,18 @@ async function fetch(
     // decode
     binary = RGBA.filter((_, i) => i % 4 !== 3).reverse();
 
-    // binary = decodeRGBA(RGBA, img.width, img.height);
-    // console.log({ length: binary.length });
-    // });
+    console.timeLog("fetch", "binary decode");
 
     const text = new TextDecoder("utf-8").decode(binary).replace(/\0+$/g, "");
-    // try {
-    //   JSON.parse(text);
-    // } catch (error) {
-    //   console.log({ text, binary });
-    //   throw error;
-    // }
     const { status, statusText, headers, body } = JSON.parse(text);
+
+    console.timeLog("fetch", "text decode");
 
     //　make response
     const result = new Response(body, { status, statusText, headers });
-    console.log(result);
+
+    console.timeEnd("fetch");
+    console.debug(result);
     return result;
   })();
 }
