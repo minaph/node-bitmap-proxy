@@ -2,62 +2,65 @@ import {
   JSONObject,
   JSONValue,
   ProxyTargetResponse,
-} from "./BitmapProxyResponse.js";
+} from "../api/_BitmapProxyResponse";
 
-/** Implemented fetch options */
-type AllowedRequestInitKeys = [
-  "url",
+import { RequestOptions } from "http";
 
-  // "method",
-  // "headers",
-  // "body",
-  // "referrer",
-  // "referrerPolicy",
-  // "mode",
-  // "credentials",
-  // "cache",
-  // "redirect",
-  // "integrity",
-  // "keepalive",
-  "signal"
-  // "window",
-];
+import { base71 } from "./base71";
 
 async function fetch(
   input: string | Request,
   init?: RequestInit
 ): Promise<Response> {
   console.time("fetch");
-  const endpoint = "http://localhost:3000/";
+  const endpoint = "https://vercel-bitmap-proxy-minaph.vercel.app/";
 
-  // listed in the same order as in the specifications.
-  // see https://fetch.spec.whatwg.org/#ref-for-dom-request%E2%91%A0
   const {
     url,
-    // method,
-    // headers,
-    // body,
-    // referrer,
-    // referrerPolicy,
-    // mode,
-    // credentials,
-    // cache,
-    // redirect,
-    // integrity,
-    // keepalive,
+    method,
+    headers,
+    body,
+    referrer,
+    referrerPolicy,
+    mode,
+    credentials,
+    cache,
+    redirect,
+    integrity,
+    keepalive,
     signal,
     // window,
   } = new Request(input, init);
+
+  const { hostname, pathname, protocol, search, port } = new URL(url);
+
+  const request: RequestOptions = {
+    method,
+    path: encodeURI(pathname + search),
+    hostname,
+    protocol,
+  };
+
+  if (port.length) {
+    request.port = port;
+  }
+
+  const entries = [...headers.entries()];
+
+  if (entries) {
+    request.headers = Object.fromEntries(entries);
+  }
 
   if (signal?.aborted) {
     return Promise.reject(new DOMException("Aborted", "AbortError"));
   }
 
   const requestUrl = ((url: string) => {
-    if (url.startsWith(endpoint)) {
-      url = url.slice(endpoint.length);
-    }
-    return new URL(url);
+    // if (!url.startsWith(endpoint)) {
+    //   url = endpoint + url;
+    // }
+    // url +=
+    return new URL(endpoint + base71(JSON.stringify(request)));
   })(url);
 
   return (async () => {
@@ -70,7 +73,7 @@ async function fetch(
     // img setup & load
     const img = document.createElement("img");
     img.crossOrigin = "Anonymous";
-    img.src = endpoint + requestUrl.href;
+    img.src = requestUrl.href;
     await img.decode();
 
     console.timeLog("fetch", "image decode");
@@ -123,3 +126,4 @@ async function fetch(
 //   console.log(name, elapsed);
 // }
 
+export default fetch;
