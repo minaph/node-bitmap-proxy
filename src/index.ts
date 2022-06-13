@@ -8,7 +8,7 @@ import {
 import { request as HTTPSRequest } from "https";
 import { Bitmap } from "./_bitmap";
 import { gzipSync, brotliCompressSync, deflateSync } from "zlib";
-import { decodeBase71 } from "../src/base71";
+import { decodeBase71 } from "./base71";
 
 import servertime from "servertime";
 

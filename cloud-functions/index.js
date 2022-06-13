@@ -7,7 +7,7 @@ const http_1 = require("http");
 const https_1 = require("https");
 const _bitmap_1 = require("./_bitmap");
 const zlib_1 = require("zlib");
-const base71_1 = require("../src/base71");
+const base71_1 = require("./base71");
 const servertime_1 = __importDefault(require("servertime"));
 function handler(request, response) {
     // servertime.addToResponse(response);
