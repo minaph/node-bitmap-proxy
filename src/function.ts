@@ -1,3 +1,3 @@
-import handler from "../api";
+import handler from "../api/index";
 
 export { handler };
