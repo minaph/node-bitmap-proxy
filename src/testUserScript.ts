@@ -1,4 +1,7 @@
+import { fetch, fetchRace } from "./UserScript";
+
 // test
+
 (async () => {
   const URLs = [
     "https://support.google.com/websearch/answer/181196?hl=en-JP",
@@ -117,7 +120,12 @@
 
   var a = URLs
     // .slice(-3)
-    .map((x) => fetch(x, { signal }));
+    // .map((x) => fetch(x, { signal }));
+    .map(async (x) => {
+      const { endpoint, response } = await fetchRace(x, { signal });
+      console.count(endpoint);
+      return response;
+    });
   await Promise.all(a);
   // console.log("done", { total });
 })();

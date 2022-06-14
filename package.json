@@ -15,7 +15,8 @@
     "babel-jest": "^28.1.1",
     "jest": "^28.1.1",
     "jest-environment-jsdom": "^28.1.1",
-    "ts-jest": "^28.0.4"
+    "ts-jest": "^28.0.4",
+    "vite": "^2.9.12"
   },
   "dependencies": {
     "@vercel/build-utils": "^4.1.0",
@@ -23,6 +24,7 @@
   },
   "scripts": {
     "test": "jest",
-    "gcp-build": "tsc -P tsconfig.cloud-functions.json"
+    "gcp-build": "tsc -P tsconfig.cloud-functions.json",
+    "start": "tsc -P tsconfig.local.json && node ./test/localserver.js"
   }
 }
