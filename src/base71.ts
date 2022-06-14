@@ -1,5 +1,26 @@
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
+let encoder: Text2Binary, decoder: Binary2Text;
+
+type Text2Binary = {
+  encode(text: string): Uint8Array;
+};
+
+type Binary2Text = {
+  decode(binary: Uint8Array): string;
+};
+
+if (TextEncoder && TextDecoder) {
+  encoder = new TextEncoder();
+  decoder = new TextDecoder();
+} else if (Buffer) {
+  encoder = {
+    encode: (text) => Buffer.from(text, "utf-8"),
+  };
+  decoder = {
+    decode: (binary) => Buffer.from(binary).toString("utf-8"),
+  };
+} else {
+  throw new Error("Buffer, TextEncoder and TextDecoder are not supported");
+}
 
 function base71(text: string): string {
   const regex =
