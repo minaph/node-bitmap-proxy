@@ -25,6 +25,6 @@
   "scripts": {
     "test": "jest",
     "gcp-build": "tsc -P tsconfig.cloud-functions.json",
-    "start": "tsc -P tsconfig.local.json && node ./test/localserver.js"
+    "start": "tsc -P tsconfig.local.json && node ./localserver.js"
   }
 }
