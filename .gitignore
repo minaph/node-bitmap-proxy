@@ -3,3 +3,7 @@ node_modules
 test
 .DS_Store
 dist
+.vercel
+local
+cloud-functions
+vite

@@ -2,40 +2,23 @@ import {
   JSONObject,
   JSONValue,
   ProxyTargetResponse,
-} from "./BitmapProxyResponse.js";
+} from "../api/_BitmapProxyResponse";
 
-/** Implemented fetch options */
-type AllowedRequestInitKeys = [
-  "url",
+import { RequestOptions } from "http";
 
-  // "method",
-  // "headers",
-  // "body",
-  // "referrer",
-  // "referrerPolicy",
-  // "mode",
-  // "credentials",
-  // "cache",
-  // "redirect",
-  // "integrity",
-  // "keepalive",
-  "signal"
-  // "window",
-];
+import { base71 } from "./base71";
 
-async function fetch(
+async function fetchInternal(
+  endpoint: string,
   input: string | Request,
   init?: RequestInit
 ): Promise<Response> {
   console.time("fetch");
-  const endpoint = "http://localhost:3000/";
 
-  // listed in the same order as in the specifications.
-  // see https://fetch.spec.whatwg.org/#ref-for-dom-request%E2%91%A0
   const {
     url,
-    // method,
-    // headers,
+    method,
+    headers,
     // body,
     // referrer,
     // referrerPolicy,
@@ -49,15 +32,31 @@ async function fetch(
     // window,
   } = new Request(input, init);
 
+  const { hostname, pathname, protocol, search, port } = new URL(url);
+
+  const request: RequestOptions = {
+    method,
+    path: encodeURI(pathname + search),
+    hostname,
+    protocol,
+  };
+
+  if (port.length) {
+    request.port = port;
+  }
+
+  const entries = [...headers.entries()];
+
+  if (entries) {
+    request.headers = Object.fromEntries(entries);
+  }
+
   if (signal?.aborted) {
     return Promise.reject(new DOMException("Aborted", "AbortError"));
   }
 
   const requestUrl = ((url: string) => {
-    if (url.startsWith(endpoint)) {
-      url = url.slice(endpoint.length);
-    }
-    return new URL(url);
+    return new URL(endpoint + base71(JSON.stringify(request)));
   })(url);
 
   return (async () => {
@@ -70,7 +69,7 @@ async function fetch(
     // img setup & load
     const img = document.createElement("img");
     img.crossOrigin = "Anonymous";
-    img.src = endpoint + requestUrl.href;
+    img.src = requestUrl.href;
     await img.decode();
 
     console.timeLog("fetch", "image decode");
@@ -99,7 +98,9 @@ async function fetch(
     console.timeLog("fetch", "binary decode");
 
     const text = new TextDecoder("utf-8").decode(binary).replace(/\0+$/g, "");
-    const { status, statusText, headers, body } = JSON.parse(text);
+    const { status, statusText, headers, body } = JSON.parse(text) as {
+      headers: Record<string, string>;
+    } & ProxyTargetResponse;
 
     console.timeLog("fetch", "text decode");
 
@@ -112,14 +113,29 @@ async function fetch(
   })();
 }
 
-// let total = 0;
+async function fetch(input: string, init?: RequestInit): Promise<Response> {
+  const endpoint = "https://vercel-bitmap-proxy.vercel.app/";
+  return fetchInternal(endpoint, input, init);
+}
 
-// function recordTime(name: string, fn: () => void) {
-//   const start = new Date();
-//   fn();
-//   const end = new Date();
-//   const elapsed = end.getTime() - start.getTime();
-//   // total += elapsed;
-//   console.log(name, elapsed);
-// }
+type RaceResult = {
+  endpoint: string;
+  response: Response;
+};
 
+async function fetchRace(
+  input: string,
+  init?: RequestInit
+): Promise<RaceResult> {
+  const endpoints = [
+    "https://vercel-bitmap-proxy.vercel.app/",
+    "https://asia-northeast1-scrgoogproject-1651036452801.cloudfunctions.net/function-2?q=",
+  ];
+  const promises = endpoints.map(async (endpoint) => {
+    const response = await fetchInternal(endpoint, input, init);
+    return { endpoint, response };
+  });
+  return Promise.race(promises);
+}
+
+export { fetch, fetchRace };
