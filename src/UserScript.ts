@@ -8,26 +8,26 @@ import { RequestOptions } from "http";
 
 import { base71 } from "./base71";
 
-async function fetch(
+async function fetchInternal(
+  endpoint: string,
   input: string | Request,
   init?: RequestInit
 ): Promise<Response> {
   console.time("fetch");
-  const endpoint = "https://vercel-bitmap-proxy-minaph.vercel.app/";
 
   const {
     url,
     method,
     headers,
-    body,
-    referrer,
-    referrerPolicy,
-    mode,
-    credentials,
-    cache,
-    redirect,
-    integrity,
-    keepalive,
+    // body,
+    // referrer,
+    // referrerPolicy,
+    // mode,
+    // credentials,
+    // cache,
+    // redirect,
+    // integrity,
+    // keepalive,
     signal,
     // window,
   } = new Request(input, init);
@@ -56,10 +56,6 @@ async function fetch(
   }
 
   const requestUrl = ((url: string) => {
-    // if (!url.startsWith(endpoint)) {
-    //   url = endpoint + url;
-    // }
-    // url +=
     return new URL(endpoint + base71(JSON.stringify(request)));
   })(url);
 
@@ -102,7 +98,9 @@ async function fetch(
     console.timeLog("fetch", "binary decode");
 
     const text = new TextDecoder("utf-8").decode(binary).replace(/\0+$/g, "");
-    const { status, statusText, headers, body } = JSON.parse(text);
+    const { status, statusText, headers, body } = JSON.parse(text) as {
+      headers: Record<string, string>;
+    } & ProxyTargetResponse;
 
     console.timeLog("fetch", "text decode");
 
@@ -115,15 +113,29 @@ async function fetch(
   })();
 }
 
-// let total = 0;
+async function fetch(input: string, init?: RequestInit): Promise<Response> {
+  const endpoint = "https://vercel-bitmap-proxy.vercel.app/";
+  return fetchInternal(endpoint, input, init);
+}
 
-// function recordTime(name: string, fn: () => void) {
-//   const start = new Date();
-//   fn();
-//   const end = new Date();
-//   const elapsed = end.getTime() - start.getTime();
-//   // total += elapsed;
-//   console.log(name, elapsed);
-// }
+type RaceResult = {
+  endpoint: string;
+  response: Response;
+};
 
-export default fetch;
+async function fetchRace(
+  input: string,
+  init?: RequestInit
+): Promise<RaceResult> {
+  const endpoints = [
+    "https://vercel-bitmap-proxy.vercel.app/",
+    "https://asia-northeast1-scrgoogproject-1651036452801.cloudfunctions.net/function-2?q=",
+  ];
+  const promises = endpoints.map(async (endpoint) => {
+    const response = await fetchInternal(endpoint, input, init);
+    return { endpoint, response };
+  });
+  return Promise.race(promises);
+}
+
+export { fetch, fetchRace };
