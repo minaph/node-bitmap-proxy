@@ -5,7 +5,11 @@ const http = require("http");
 http
   .createServer((req, res) => {
     const url = new URL(req.url, "http://localhost:3000");
-    req.query = { q: url.pathname.substring(1) };
+    if (url.searchParams.has("q")) {
+      req.query = { q: url.searchParams.get("q") };
+    } else {
+      req.query = { q: url.pathname.substring(1) };
+    }
     res.status = (code) => {
       res.statusCode = code;
       return res;

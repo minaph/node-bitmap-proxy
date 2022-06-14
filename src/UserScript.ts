@@ -130,6 +130,7 @@ async function fetchRace(
   const endpoints = [
     "https://vercel-bitmap-proxy.vercel.app/",
     "https://asia-northeast1-scrgoogproject-1651036452801.cloudfunctions.net/function-2?q=",
+    "https://exuberant-quilt-chimpanzee.glitch.me/",
   ];
   const promises = endpoints.map(async (endpoint) => {
     const response = await fetchInternal(endpoint, input, init);
