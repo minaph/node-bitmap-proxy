@@ -4,7 +4,7 @@ export interface ProxyTargetResponse {
   headers: JSONObject;
   status: number;
   statusText: string;
-  body: string[] | string;
+  body: string;
 }
 
 

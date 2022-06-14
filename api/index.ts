@@ -11,6 +11,7 @@ import { gzipSync, brotliCompressSync, deflateSync } from "zlib";
 import { decodeBase71 } from "../src/base71";
 
 import servertime from "servertime";
+import { ProxyTargetResponse } from "./_BitmapProxyResponse";
 
 export default function handler(
   request: VercelRequest,
@@ -80,7 +81,7 @@ export default function handler(
         status: statusCode,
         statusText: statusMessage,
         body,
-      });
+      } as ProxyTargetResponse);
       const binary = Buffer.from(result);
       const bitmap = fromBuffer(binary);
       serverTiming.end("4-build");
