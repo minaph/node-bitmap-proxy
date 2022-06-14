@@ -1,7 +1,7 @@
 {
   "name": "vercel-bitmap-proxy",
   "version": "0.0.1",
-  "main": "./api/index.ts",
+  "main": "./cloud-functions/src/function.js",
   "repository": "git@github.com:minaph/node-bitmap-proxy.git",
   "author": "Yuki Minoh <yukikaze.0511@gmail.com>",
   "license": "MIT",
@@ -22,6 +22,7 @@
     "servertime": "^3.1.1"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "gcp-build": "tsc -P tsconfig.cloud-functions.json"
   }
 }
