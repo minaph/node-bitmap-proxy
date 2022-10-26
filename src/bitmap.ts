@@ -101,12 +101,12 @@ export class Bitmap {
 
   static fromUint8Array(data: Uint8Array) {
     const width = 200;
-    const height = Math.ceil(data.length / (width * 3));
-    const space = width * height * 3 - data.length;
+    const height = Math.ceil((data.length + 1) / (width * 3));
+    const space = width * height * 3 - data.length - 1;
     console.log({ data: data.length, width, height, space });
     const bitmap = new Bitmap(width, height);
 
-    bitmap.setData(new Uint8Array([...data, ...Array(space).fill(0)]));
+    bitmap.setData(new Uint8Array([...data, 1, ...Array(space).fill(0)]));
     console.log({ bitmap });
     return bitmap;
   }
