@@ -57,7 +57,7 @@ export default function handler(
     const { headers, statusCode, statusMessage } = res;
     let body = "";
     let ttfb = false;
-    res.setEncoding("utf8");
+    res.setEncoding("binary");
     res.on("data", (data) => {
       if (!ttfb) {
         ttfb = true;
