@@ -39,7 +39,8 @@ export default function handler(
     return;
   }
   if ("path" in json && typeof json.path === "string") {
-    json.path = encodeURI(json.path);
+    // json.path = encodeURI(json.path);
+    json.path = (json.path);
   }
   console.log(JSON.stringify(json, null, 2));
   const contentEncoding = ContentEncoding.fromRequest(request);
