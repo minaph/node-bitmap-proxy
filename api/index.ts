@@ -83,7 +83,7 @@ export default function handler(
         statusText: statusMessage,
         body,
       } as ProxyTargetResponse);
-      const binary = Buffer.from(result);
+      const binary = Buffer.from(result, "binary");
       const bitmap = fromBuffer(binary);
       serverTiming.end("4-build");
       serverTiming.start("5-compress");
