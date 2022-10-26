@@ -1,0 +1,42 @@
+@startuml diagram
+
+object UTF8Binary
+object UTF16Binary
+object Base64Binary
+
+
+package UTFXText{
+
+    package ASCII {
+        object ASCIIText
+        package URLSafe {
+            object Base64
+            object Base71
+        }
+
+    }
+    object Text
+}
+
+
+ASCIIText -> Base64: btoa
+Base64 -> ASCIIText : atob
+
+UTFXText --> UTF16Binary : String.codePointAt
+UTFXText --> UTF8Binary : TextEncoder
+
+UTF16Binary --> UTFXText : String.fromCodePoint / TextDecoder
+UTF8Binary --> UTFXText : TextDecoder
+
+Text --> ASCII : encodeURI
+ASCII --> Text : decodeURI
+
+ASCII --> UTF8Binary : String.codePointAt
+
+Base64 --> Base64Binary : String.codePointAt / TextEncoder
+Base64Binary --> Base64 : TextDecoder / String.fromCodePoint
+
+Text --> Base71 : encodeURIComponent
+Base71 --> Text : decodeURIComponent
+
+@enduml

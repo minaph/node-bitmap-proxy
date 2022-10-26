@@ -1,0 +1,31 @@
+{
+  "errorType": "Runtime.UnhandledPromiseRejection",
+  "errorMessage": "TypeError [ERR_INVALID_URL]: Invalid URL",
+  "reason": {
+    "errorType": "TypeError",
+    "errorMessage": "Invalid URL",
+    "code": "ERR_INVALID_URL",
+    "input": "vercel-bitmap-proxy.vercel.app",
+    "stack": [
+      "TypeError [ERR_INVALID_URL]: Invalid URL",
+      "    at new NodeError (node:internal/errors:371:5)",
+      "    at onParseError (node:internal/url:552:9)",
+      "    at new URL (node:internal/url:628:5)",
+      "    at new URL (node:internal/url:625:22)",
+      "    at handler (/var/task/api/index.js:4:22)",
+      "    at Server.<anonymous> (/var/task/___vc/__helpers.js:813:19)",
+      "    at Server.emit (node:events:520:28)",
+      "    at parserOnIncoming (node:_http_server:951:12)",
+      "    at HTTPParser.parserOnHeadersComplete (node:_http_common:128:17)"
+    ]
+  },
+  "promise": {},
+  "stack": [
+    "Runtime.UnhandledPromiseRejection: TypeError [ERR_INVALID_URL]: Invalid URL",
+    "    at process.<anonymous> (file:///var/runtime/index.mjs:775:15)",
+    "    at process.emit (node:events:532:35)",
+    "    at emit (node:internal/process/promises:133:20)",
+    "    at processPromiseRejections (node:internal/process/promises:260:27)",
+    "    at processTicksAndRejections (node:internal/process/task_queues:97:32)"
+  ]
+}
