@@ -55,22 +55,21 @@ export default function handler(
 
   const req = proxyRequest(json, (res) => {
     const { headers, statusCode, statusMessage } = res;
-    let body = "";
+    // let body = "";
     let ttfb = false;
-    res.setEncoding("binary");
+    const dataBuffer = [] as Buffer[];
+    // res.setEncoding("utf8");
     res.on("data", (data) => {
       if (!ttfb) {
         ttfb = true;
         serverTiming.end("2-request");
         serverTiming.start("3-download");
       }
-      if (Buffer.isBuffer(data)) {
-        data = data.toString();
-      } else if (typeof data !== "string") {
-        throw new Error("Unexpected data type");
+      if (typeof data === "string") {
+        dataBuffer.push(Buffer.from(data));
+      } else {
+        dataBuffer.push(data);
       }
-
-      body += data;
     });
 
     res.on("end", onEnd);
@@ -82,7 +81,8 @@ export default function handler(
         headers,
         status: statusCode,
         statusText: statusMessage,
-        body,
+        // body,
+        body: Buffer.concat(dataBuffer).toString(),
       } as ProxyTargetResponse);
       const binary = Buffer.from(result);
       const bitmap = fromBuffer(binary);
