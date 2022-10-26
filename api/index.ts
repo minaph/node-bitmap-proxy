@@ -40,7 +40,7 @@ export default function handler(
   }
   if ("path" in json && typeof json.path === "string") {
     // json.path = encodeURI(json.path);
-    json.path = (json.path);
+    json.path = json.path;
   }
   console.log(JSON.stringify(json, null, 2));
   const contentEncoding = ContentEncoding.fromRequest(request);
@@ -57,6 +57,7 @@ export default function handler(
     const { headers, statusCode, statusMessage } = res;
     let body = "";
     let ttfb = false;
+    res.setEncoding("utf8");
     res.on("data", (data) => {
       if (!ttfb) {
         ttfb = true;
@@ -83,7 +84,7 @@ export default function handler(
         statusText: statusMessage,
         body,
       } as ProxyTargetResponse);
-      const binary = Buffer.from(result, "binary");
+      const binary = Buffer.from(result);
       const bitmap = fromBuffer(binary);
       serverTiming.end("4-build");
       serverTiming.start("5-compress");
@@ -130,7 +131,11 @@ function fromBuffer(data: Buffer) {
 
   const bitmap = new Bitmap(width, height);
 
-  bitmap.bitmapData = Buffer.concat([data, Buffer.alloc(1).fill(1), Buffer.alloc(space)]);
+  bitmap.bitmapData = Buffer.concat([
+    data,
+    Buffer.alloc(1).fill(1),
+    Buffer.alloc(space),
+  ]);
   return bitmap;
 }
 
