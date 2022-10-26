@@ -124,12 +124,12 @@ export default function handler(
 
 function fromBuffer(data: Buffer) {
   const width = 256;
-  const height = Math.ceil(data.length / (width * 3));
-  const space = width * height * 3 - data.length;
+  const height = Math.ceil((data.length + 1) / (width * 3));
+  const space = width * height * 3 - data.length - 1;
 
   const bitmap = new Bitmap(width, height);
 
-  bitmap.bitmapData = Buffer.concat([data, Buffer.alloc(space)]);
+  bitmap.bitmapData = Buffer.concat([data, Buffer.alloc(1).fill(1), Buffer.alloc(space)]);
   return bitmap;
 }
 
