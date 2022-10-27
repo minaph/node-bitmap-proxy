@@ -14,6 +14,7 @@ type ProxyResponseHeader = {
 class ProxyResponse {
   headerLength: number;
   header: ProxyResponseHeader;
+  private _header: Buffer;
   body: Buffer;
   constructor({ headers, status, statusText, body }: ProxyTargetResponse) {
     this.header = {
@@ -22,14 +23,15 @@ class ProxyResponse {
       statusText,
     };
     this.body = body;
-    this.headerLength = Buffer.byteLength(JSON.stringify(this.header));
+    this._header = Buffer.from(JSON.stringify(this.header));
+    this.headerLength = this._header.byteLength;
   }
 
   toBuffer() {
     const totalLength = 2 + this.headerLength + this.body.byteLength;
     const buffer = Buffer.alloc(totalLength);
     buffer.writeUInt16LE(this.headerLength, 0);
-    buffer.write(JSON.stringify(this.header), 2);
+    buffer.fill(this._header, 2);
     this.body.copy(buffer, 2 + this.headerLength);
     return buffer;
   }
