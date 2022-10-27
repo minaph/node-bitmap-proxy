@@ -11,7 +11,7 @@ import { gzipSync, brotliCompressSync, deflateSync } from "zlib";
 import { decodeBase71 } from "../src/base71";
 
 import servertime from "servertime";
-import { ProxyTargetResponse } from "./_BitmapProxyResponse";
+import { ProxyTargetResponse, ProxyResponse } from "./_BitmapProxyResponse";
 
 export default function handler(
   request: VercelRequest,
@@ -77,14 +77,15 @@ export default function handler(
     function onEnd() {
       serverTiming.end("3-download");
       serverTiming.start("4-build");
-      const result = JSON.stringify({
+      const result = {
         headers,
         status: statusCode,
         statusText: statusMessage,
         // body,
-        body: Buffer.concat(dataBuffer).toString(),
-      } as ProxyTargetResponse);
-      const binary = Buffer.from(result);
+        body: Buffer.concat(dataBuffer),
+      } as ProxyTargetResponse;
+      // const binary = Buffer.from(result);
+      const binary = new ProxyResponse(result).toBuffer();
       const bitmap = fromBuffer(binary);
       serverTiming.end("4-build");
       serverTiming.start("5-compress");
