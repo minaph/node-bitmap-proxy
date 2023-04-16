@@ -1,31 +1,42 @@
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
+import { Bookmarklet } from "./Bookmarklet";
 
 function base71(text: string): string {
   const regex =
-    /[^!'()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz]/g;
+    /[^!'()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz]+/g;
   return text.replace(regex, encodeChar);
 }
 
-function encodeChar(text: string): string {
-  if (text === "~") {
+function encodeChar(_text: string): string {
+  if (_text === "~") {
     return "~~";
   }
-  const data = encoder.encode(text);
-  let left = 0;
-  for (const byte of data) {
-    left = (left << 8) | byte;
-  }
-  const result = new Uint8Array(data.length * 4);
-  let i = 0;
 
-  while (left > 0) {
-    const index = left % 71;
-    left = Math.floor(left / 71);
-    result[i++] = getCodepoint(index);
-  }
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  return (
+    "~" +
+    _text
+      .split("~")
+      .map((text) => {
+        const data = encoder.encode(text);
+        let left = 0n;
+        for (const byte of data) {
+          left = (left << 8n) | BigInt(byte);
+        }
+        const result = new Uint8Array(data.length * 4);
+        let i = 0;
 
-  return "~" + decoder.decode(result.subarray(0, i)) + "~";
+        while (left > 0) {
+          const index = left % 70n;
+          left = left / 70n;
+          result[i++] = getCodepoint(Number(index));
+        }
+
+        return decoder.decode(result.subarray(0, i));
+      })
+      .join("~~") +
+    "~"
+  );
 }
 
 function getCodepoint(i: number): number {
@@ -43,8 +54,11 @@ function getCodepoint(i: number): number {
   return _i;
 }
 
+const encodeCharBL = new Bookmarklet(encodeChar, [getCodepoint]);
+const base71BL = new Bookmarklet(base71, [encodeCharBL]);
+
 function decodeBase71(text: string): string {
-  const regex = /~.*?~/g;
+  const regex = /~.*?(?<!~)~(?!~)|~~/g;
   return text.replace(regex, decodeChar);
 }
 
@@ -53,22 +67,30 @@ function decodeChar(text: string): string {
     return "~";
   }
 
-  let _text = text.substring(1, text.length - 1);
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
 
-  const data = encoder.encode(_text);
-  let left = 0n;
-  let j = 0n;
-  for (const byte of data) {
-    left += 71n ** j++ * BigInt(getInt(byte));
-  }
-  const result = new Uint8Array(data.length);
-  let i = data.length - 1;
-  while (left > 0) {
-    const index = left % 256n;
-    left >>= 8n;
-    result[i--] = Number(index);
-  }
-  return decoder.decode(result.subarray(i + 1));
+  return text
+    .substring(1, text.length - 1)
+    .split("~~")
+    .map((_text) => {
+      if (!_text) return "";
+      const data = encoder.encode(_text);
+      let left = 0n;
+      let j = 0n;
+      for (const byte of data) {
+        left += 70n ** j++ * BigInt(getInt(byte));
+      }
+      const result = new Uint8Array(data.length);
+      let i = data.length - 1;
+      while (left > 0) {
+        const index = left % 256n;
+        left >>= 8n;
+        result[i--] = Number(index);
+      }
+      return decoder.decode(result.subarray(i + 1));
+    })
+    .join("~");
 }
 
 function getInt(i: number): number {
@@ -86,4 +108,4 @@ function getInt(i: number): number {
   return _i - 1;
 }
 
-export { base71, decodeBase71 };
+export { base71, base71BL, decodeBase71 };
