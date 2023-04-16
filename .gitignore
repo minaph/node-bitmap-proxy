@@ -7,3 +7,4 @@ dist
 local
 cloud-functions
 public
+tsconfig.json
