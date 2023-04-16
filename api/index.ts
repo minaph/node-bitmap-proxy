@@ -26,7 +26,7 @@ export default function handler(
     query: { q },
   } = request;
   if (!q) {
-    response.status(400).send("Invalid request");
+    response.status(400).send("Invalid request url");
     return;
   }
 
@@ -35,7 +35,7 @@ export default function handler(
   try {
     json = JSON.parse(data.toString()) as RequestOptions;
   } catch (e) {
-    response.status(400).send("Invalid request");
+    response.status(400).send("Undecodable request");
     return;
   }
   if ("path" in json && typeof json.path === "string") {
