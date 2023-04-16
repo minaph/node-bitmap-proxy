@@ -6,4 +6,5 @@ dist
 .vercel
 local
 cloud-functions
-vite
+public
+tsconfig.json

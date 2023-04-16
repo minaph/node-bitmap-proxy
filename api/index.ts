@@ -11,7 +11,7 @@ import { gzipSync, brotliCompressSync, deflateSync } from "zlib";
 import { decodeBase71 } from "../src/base71";
 
 import servertime from "servertime";
-import { ProxyTargetResponse } from "./_BitmapProxyResponse";
+import { ProxyTargetResponse, ProxyResponse } from "./_BitmapProxyResponse";
 
 export default function handler(
   request: VercelRequest,
@@ -26,7 +26,7 @@ export default function handler(
     query: { q },
   } = request;
   if (!q) {
-    response.status(400).send("Invalid request");
+    response.status(400).send("Invalid request url");
     return;
   }
 
@@ -35,12 +35,10 @@ export default function handler(
   try {
     json = JSON.parse(data.toString()) as RequestOptions;
   } catch (e) {
-    response.status(400).send("Invalid request");
+    response.status(400).send("Undecodable request");
     return;
   }
-  if ("path" in json && typeof json.path === "string") {
-    json.path = encodeURI(json.path);
-  }
+
   console.log(JSON.stringify(json, null, 2));
   const contentEncoding = ContentEncoding.fromRequest(request);
 
@@ -54,21 +52,21 @@ export default function handler(
 
   const req = proxyRequest(json, (res) => {
     const { headers, statusCode, statusMessage } = res;
-    let body = "";
+    // let body = "";
     let ttfb = false;
+    const dataBuffer = [] as Buffer[];
+    // res.setEncoding("utf8");
     res.on("data", (data) => {
       if (!ttfb) {
         ttfb = true;
         serverTiming.end("2-request");
         serverTiming.start("3-download");
       }
-      if (Buffer.isBuffer(data)) {
-        data = data.toString();
-      } else if (typeof data !== "string") {
-        throw new Error("Unexpected data type");
+      if (typeof data === "string") {
+        dataBuffer.push(Buffer.from(data));
+      } else {
+        dataBuffer.push(data);
       }
-
-      body += data;
     });
 
     res.on("end", onEnd);
@@ -76,13 +74,15 @@ export default function handler(
     function onEnd() {
       serverTiming.end("3-download");
       serverTiming.start("4-build");
-      const result = JSON.stringify({
+      const result = {
         headers,
         status: statusCode,
         statusText: statusMessage,
-        body,
-      } as ProxyTargetResponse);
-      const binary = Buffer.from(result);
+        // body,
+        body: Buffer.concat(dataBuffer),
+      } as ProxyTargetResponse;
+      // const binary = Buffer.from(result);
+      const binary = new ProxyResponse(result).toBuffer();
       const bitmap = fromBuffer(binary);
       serverTiming.end("4-build");
       serverTiming.start("5-compress");
@@ -122,14 +122,22 @@ export default function handler(
   req.end();
 }
 
+
+
+
+
 function fromBuffer(data: Buffer) {
   const width = 256;
-  const height = Math.ceil(data.length / (width * 3));
-  const space = width * height * 3 - data.length;
+  const height = Math.ceil((data.length + 1) / (width * 3));
+  const space = width * height * 3 - data.length - 1;
 
   const bitmap = new Bitmap(width, height);
 
-  bitmap.bitmapData = Buffer.concat([data, Buffer.alloc(space)]);
+  bitmap.bitmapData = Buffer.concat([
+    data,
+    Buffer.alloc(1).fill(1),
+    Buffer.alloc(space),
+  ]);
   return bitmap;
 }
 

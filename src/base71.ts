@@ -1,5 +1,4 @@
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
+import { Bookmarklet } from "./Bookmarklet";
 
 function base71(text: string): string {
   const regex =
@@ -11,6 +10,9 @@ function encodeChar(_text: string): string {
   if (_text === "~") {
     return "~~";
   }
+
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
   return (
     "~" +
     _text
@@ -52,6 +54,9 @@ function getCodepoint(i: number): number {
   return _i;
 }
 
+const encodeCharBL = new Bookmarklet(encodeChar, [getCodepoint]);
+const base71BL = new Bookmarklet(base71, [encodeCharBL]);
+
 function decodeBase71(text: string): string {
   const regex = /~.*?(?<!~)~(?!~)|~~/g;
   return text.replace(regex, decodeChar);
@@ -61,6 +66,9 @@ function decodeChar(text: string): string {
   if (text === "~~") {
     return "~";
   }
+
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
 
   return text
     .substring(1, text.length - 1)
@@ -100,4 +108,4 @@ function getInt(i: number): number {
   return _i - 1;
 }
 
-export { base71, decodeBase71 };
+export { base71, base71BL, decodeBase71 };
