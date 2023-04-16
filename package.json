@@ -23,6 +23,10 @@
   },
   "scripts": {
     "test": "jest",
-    "gcp-build": "tsc -P tsconfig.cloud-functions.json"
+    "gcp-build": "tsc -P tsconfig.cloud-functions.json",
+    "vercel-build": "yes | cp -rf tsconfig.vercel.json tsconfig.json && tsc"
+  },
+  "volta": {
+    "node": "16.20.0"
   }
 }

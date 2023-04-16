@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.scrapbox.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "module": "CommonJS"
+  },
+  "exclude": ["node_modules"],
+  "files": ["api/index.ts"]
+}
