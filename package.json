@@ -27,7 +27,7 @@
     "gcp-build": "tsc -P tsconfig.cloud-functions.json",
     "start": "tsc -P tsconfig.local.json && node ./localserver.js",
     "vercel-build": "yes | cp -rf tsconfig.vercel.json tsconfig.json && tsc",
-    "pull:subtree": "git subtree pull --prefix bitmap-fetch userscripts bitmap-fetch"
+    "pull:subtree": "git subtree pull --prefix bitmap-fetch userscripts bitmap-fetch --squash"
   },
   "volta": {
     "node": "16.20.0"
