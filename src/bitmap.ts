@@ -1,35 +1,48 @@
-function num2LittleEndian(num: number, bytes: number): number[] {
-  let arr = [];
-  for (let i = 0; i < bytes; i++) {
-    arr.push(num & 0xff);
-    num = num >> 8;
-  }
-  return arr;
+import { Buffer } from "buffer";
+import { BinaryBuilder } from "./BinaryBuilder";
+
+export function fromBuffer(data: Buffer) {
+  const width = 256;
+  const height = Math.ceil((data.length + 1) / (width * 3));
+  const space = width * height * 3 - data.length - 1;
+
+  const bitmap = new Bitmap(width, height);
+
+  bitmap.bitmapData = Buffer.concat([
+    data,
+    Buffer.alloc(1).fill(1),
+    Buffer.alloc(space),
+  ]);
+  return bitmap;
 }
 
-class BitmapFileHeader {
+class BitmapFileHeader extends BinaryBuilder {
   fileType: string = "BM";
   fileSize: number;
   bitmapOffset: number;
+  static byteLength: number = 14;
 
   constructor(fileSize: number, bitmapOffset: number) {
+    super(BitmapFileHeader.byteLength);
     this.fileSize = fileSize;
     this.bitmapOffset = bitmapOffset;
   }
 
-  getLittleEndian(): number[] {
-    let arr = [];
-    arr.push(this.fileType.charCodeAt(0));
-    arr.push(this.fileType.charCodeAt(1));
-    arr.push(...num2LittleEndian(this.fileSize, 4));
-    arr.push(...Array(4).fill(0));
-    arr.push(...num2LittleEndian(this.bitmapOffset, 4));
+  getUint8LE(): ReturnType<typeof BinaryBuilder.prototype.end> {
+    // let arr = Buffer.allocUnsafe(this.fileSize);
+    this.push(this.fileType.charCodeAt(0), 1);
+    this.push(this.fileType.charCodeAt(1), 1);
+    this.push(this.fileSize, 4);
+    this.offset += 4;
+    this.push(this.bitmapOffset, 4);
 
-    return arr;
+    console.assert(this.offset === BitmapFileHeader.byteLength);
+
+    return this.end();
   }
 }
 
-class BitmapInfoHeader {
+class BitmapInfoHeader extends BinaryBuilder {
   size: number = 40;
   width: number;
   height: number;
@@ -41,82 +54,66 @@ class BitmapInfoHeader {
   yPelsPerMeter: number = 50190;
   clrUsed: number = 0;
   clrImportant: number = 0;
+  static byteLength: number = 40;
 
   constructor(width: number, height: number) {
+    super(BitmapInfoHeader.byteLength);
     this.width = width;
     this.height = height;
     this.sizeImage = width * height * 3;
   }
-  getLittleEndian(): number[] {
-    let arr = [];
-    arr.push(...num2LittleEndian(this.size, 4));
-    arr.push(...num2LittleEndian(this.width, 4));
-    arr.push(...num2LittleEndian(this.height, 4));
-    arr.push(...num2LittleEndian(this.planes, 2));
-    arr.push(...num2LittleEndian(this.bitPix, 2));
-    arr.push(...num2LittleEndian(this.compression, 4));
-    arr.push(...num2LittleEndian(this.sizeImage, 4));
-    arr.push(...num2LittleEndian(this.xPelsPerMeter, 4));
-    arr.push(...num2LittleEndian(this.yPelsPerMeter, 4));
-    arr.push(...num2LittleEndian(this.clrUsed, 4));
-    arr.push(...num2LittleEndian(this.clrImportant, 4));
+  getUint8LE(): Buffer {
+    // let arr = [];
+    this.push(this.size, 4);
+    this.push(this.width, 4);
+    this.push(this.height, 4);
+    this.push(this.planes, 2);
+    this.push(this.bitPix, 2);
+    this.push(this.compression, 4);
+    this.push(this.sizeImage, 4);
+    this.push(this.xPelsPerMeter, 4);
+    this.push(this.yPelsPerMeter, 4);
+    this.push(this.clrUsed, 4);
+    this.push(this.clrImportant, 4);
 
-    return arr;
+    console.assert(this.offset === BitmapInfoHeader.byteLength);
+
+    return this.end();
   }
 }
 
-export class Bitmap {
+export class Bitmap extends BinaryBuilder {
   bitmapFileHeader: BitmapFileHeader;
   bitmapInfoHeader: BitmapInfoHeader;
 
-  bitmapData: Uint8Array | null;
-  length: number;
+  bitmapData: Buffer | number[] | null;
+  byteLength: number;
 
   constructor(width: number, height: number) {
-    this.length = width * height * 3 + 54;
+    super(width * height * 3 + 54);
+    this.byteLength = width * height * 3 + 54;
 
-    this.bitmapFileHeader = new BitmapFileHeader(width * height * 3 + 54, 54);
+    this.bitmapFileHeader = new BitmapFileHeader(this.byteLength, 54);
     this.bitmapInfoHeader = new BitmapInfoHeader(width, height);
     this.bitmapData = null;
   }
 
-  getLittleEndian(): Uint8Array {
+  getUint8LE() {
     if (this.bitmapData === null) {
       console.error("bitmapData is null");
-      // this.setData(new Uint8Array(arr));
     }
-    const arr = [
-      ...this.bitmapFileHeader.getLittleEndian(),
-      // .map((x) => (x < 128 ? x : x - 256)),
-      ...this.bitmapInfoHeader.getLittleEndian(),
-      // .map((x) => (x < 128 ? x : x - 256)),
-      ...this.bitmapData!,
-    ];
-    return new Uint8Array(arr);
+
+    this.append(this.bitmapFileHeader.getUint8LE());
+    this.append(this.bitmapInfoHeader.getUint8LE());
+    if (Buffer.isBuffer(this.bitmapData)) {
+      this.append(this.bitmapData);
+    } else {
+      this.append(BinaryBuilder.make(this.bitmapData!));
+    }
+
+    console.assert(this.offset === this.byteLength);
+
+    return this.end();
   }
 
-  private setData(data: Uint8Array) {
-    this.bitmapData = data;
-  }
-
-  static fromUint8Array(data: Uint8Array) {
-    const width = 200;
-    const height = Math.ceil((data.length + 1) / (width * 3));
-    const space = width * height * 3 - data.length - 1;
-    console.log({ data: data.length, width, height, space });
-    const bitmap = new Bitmap(width, height);
-
-    bitmap.setData(new Uint8Array([...data, 1, ...Array(space).fill(0)]));
-    console.log({ bitmap });
-    return bitmap;
-  }
-
-  toString() {
-    return new TextDecoder("utf-8").decode(this.getLittleEndian());
-  }
-
-  static fromString(str: string) {
-    const data = new TextEncoder().encode(str);
-    return Bitmap.fromUint8Array(data);
-  }
 }

@@ -1,2 +1,2 @@
-import handler from "../api/index";
+import handler from "./BitmapHttpServer";
 export { handler };
