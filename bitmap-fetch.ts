@@ -1,4 +1,3 @@
-import { Bookmarklet } from "../src/Bookmarklet";
 import { base64UrlEncode } from "./base64UrlEncode";
 
 type JSONObject = {
@@ -199,9 +198,5 @@ async function fetchRace(
   return Promise.race(promises);
 }
 
-const scrapboxFetchBL = new Bookmarklet(fetch, [fetchInternal]);
-const fetchInternalDep = new Bookmarklet(fetchInternal, [base64UrlEncode, fetchImageAsResponse]);
-const fetchBL = new Bookmarklet(fetch, [fetchInternalDep]);
 
-
-export { fetch, fetchRace, fetchInternal, scrapboxFetchBL, fetchBL, fetchImageAsResponse };
+export { fetch, fetchRace, fetchInternal, fetchImageAsResponse };
