@@ -1,17 +1,18 @@
-import type { VercelResponse, VercelRequest } from "@vercel/node";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   request as HTTPRequest,
-  RequestOptions,
   IncomingMessage,
   OutgoingHttpHeaders,
+  RequestOptions,
 } from "http";
 import { request as HTTPSRequest } from "https";
+import { brotliCompressSync, deflateSync, gzipSync } from "zlib";
+import { TextDecoder } from "util";
+import { base64UrlDecode } from "../bitmap-fetch/base64UrlDecode";
 import { Bitmap } from "./_bitmap";
-import { gzipSync, brotliCompressSync, deflateSync } from "zlib";
-import { base64UrlDecode } from "../bitmap-fetch/base64UrlDecode"
 
 import servertime from "servertime";
-import { ProxyTargetResponse, ProxyResponse } from "./_BitmapProxyResponse";
+import { ProxyResponse, ProxyTargetResponse } from "./_BitmapProxyResponse";
 
 export default function handler(
   request: VercelRequest,
@@ -30,7 +31,7 @@ export default function handler(
     return;
   }
 
-  const data = base64UrlDecode(q as string);
+  const data = new TextDecoder().decode(base64UrlDecode(q as string));
   let json: RequestOptions;
   let reqBody: Uint8Array | null = null;
   try {
