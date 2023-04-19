@@ -10,20 +10,18 @@
     "@babel/core": "^7.18.5",
     "@babel/preset-env": "^7.18.2",
     "@babel/preset-typescript": "^7.17.12",
-    "@types/jest": "^28.1.1",
     "@vercel/node": "^2.1.0",
     "babel-jest": "^28.1.1",
-    "jest": "^28.1.1",
     "jest-environment-jsdom": "^28.1.1",
-    "ts-jest": "^28.0.4",
-    "vite": "^2.9.12"
+    "vite": "^2.9.12",
+    "vitest": "^0.30.1"
   },
   "dependencies": {
     "@vercel/build-utils": "^4.1.0",
     "servertime": "^3.1.1"
   },
   "scripts": {
-    "test": "jest",
+    "test": "vitest",
     "gcp-build": "tsc -P tsconfig.cloud-functions.json",
     "start": "tsc -P tsconfig.local.json && node ./localserver.js",
     "vercel-build": "yes | cp -rf tsconfig.vercel.json tsconfig.json && tsc",
