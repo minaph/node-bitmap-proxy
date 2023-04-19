@@ -8,7 +8,7 @@ import {
 import { request as HTTPSRequest } from "https";
 import { Bitmap } from "./_bitmap";
 import { gzipSync, brotliCompressSync, deflateSync } from "zlib";
-import { decodeBase71 } from "../src/base71";
+import { base64UrlDecode } from "../bitmap-fetch/base64UrlDecode"
 
 import servertime from "servertime";
 import { ProxyTargetResponse, ProxyResponse } from "./_BitmapProxyResponse";
@@ -30,10 +30,16 @@ export default function handler(
     return;
   }
 
-  const data = decodeBase71(q as string);
+  const data = base64UrlDecode(q as string);
   let json: RequestOptions;
+  let reqBody: Uint8Array;
   try {
-    json = JSON.parse(data.toString()) as RequestOptions;
+    const _json = JSON.parse(data.toString()) as RequestOptions & { body?: string };
+    if (_json.body) {
+      reqBody = base64UrlDecode(_json.body);
+      delete _json.body;
+    }
+    json = _json as RequestOptions;
   } catch (e) {
     response.status(400).send("Undecodable request");
     return;
@@ -119,6 +125,9 @@ export default function handler(
     }
   });
 
+  if (reqBody) {
+    req.write(reqBody);
+  }
   req.end();
 }
 
