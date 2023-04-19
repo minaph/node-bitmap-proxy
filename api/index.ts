@@ -41,6 +41,7 @@ export default function handler(
     }
     json = _json as RequestOptions;
   } catch (e) {
+    console.log(e);
     response.status(400).send("Undecodable request");
     return;
   }
