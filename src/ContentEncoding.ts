@@ -1,7 +1,13 @@
+/**
+ * HTTPのContent-Encodingヘッダーを処理するためのクラス。
+ *
+ * @module ContentEncoding
+ */
+
 import { IncomingMessage } from "http";
 import { brotliCompressSync, deflateSync, gzipSync } from "zlib";
 
-type Encodings = "identity" | "br" | "gzip" | "compress";
+export type Encodings = "identity" | "br" | "gzip" | "compress";
 
 export class ContentEncoding {
   static get(headers: { [key: string]: string; }) {

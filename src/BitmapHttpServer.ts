@@ -19,19 +19,19 @@ type FetchRequestOptions = RequestOptions & {
 };
 
 function parseDataUrl(input: string) {
-  const matches = /^(\w+\/\w+)?(;base64)?,(.*)$/.exec(input);
+  const matches = /^(\w+\/[\w+]+)?(;base64)?,(.*)$/.exec(input);
   if (!matches) {
     return null;
   }
   const mimeType = matches[1] || "text/plain";
   const isBase64 = !!matches[2];
   const data = matches[3];
-  const body = isBase64 ? Buffer.from(data, "base64") : Buffer.from(data);
+  const body = isBase64 ? Buffer.from(decodeURI(data), "base64") : Buffer.from(decodeURI(data));
   return { mimeType, body };
 }
 
-function makeDataUrlRequest(reqUrl: string,  callback: (res: http.IncomingMessage) => void) {
-  const { mimeType, body } = parseDataUrl(reqUrl)!;
+function makeDataUrlRequest(reqPath: string,  callback: (res: http.IncomingMessage) => void) {
+  const { mimeType, body } = parseDataUrl(reqPath)!;
   const res = new http.IncomingMessage(new net.Socket());
   res.statusCode = 200;
   res.statusMessage = "OK";
