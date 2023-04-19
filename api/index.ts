@@ -32,7 +32,7 @@ export default function handler(
 
   const data = base64UrlDecode(q as string);
   let json: RequestOptions;
-  let reqBody: Uint8Array;
+  let reqBody: Uint8Array | null = null;
   try {
     const _json = JSON.parse(data.toString()) as RequestOptions & { body?: string };
     if (_json.body) {
