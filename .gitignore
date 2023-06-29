@@ -4,6 +4,6 @@ node_modules
 dist
 .vercel
 local
-cloud-functions
+# cloud-functions
 public
 tsconfig.json
