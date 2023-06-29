@@ -15,8 +15,6 @@ interface ProxyTargetResponse {
   body: Uint8Array;
 }
 
-// import { RequestOptions } from "http";
-
 type NodeHTTPRequestOptions = {
   method: string;
   path: string;

@@ -1,2 +1,7 @@
 import handler from "./BitmapHttpServer";
-export { handler };
+import functions from '@google-cloud/functions-framework';
+// export { handler };
+
+functions.http("bitmap-server", (req, res) => {
+  handler(req, res);
+});
