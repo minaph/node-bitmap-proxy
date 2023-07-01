@@ -153,7 +153,7 @@ export default function handler(request: http.IncomingMessage, response: http.Se
 
       if (checkAllFilesExist(id, n)) {
         q = readAllFiles(id, n);
-        fs.unlinkSync(path);
+        fs.rmSync(path, { recursive: true, force: true });
       } else {
         sendSignal(response, true);
         return;
