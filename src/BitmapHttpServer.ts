@@ -349,7 +349,8 @@ export default async function handler(request: http.IncomingMessage, response: h
       }
       if (await fs.isAllExists(idList)) {
         q = await fs.readAllFiles(idList);
-        fs.remove(fileId, { recursive: true, force: true });
+        // fs.remove(fileId, { recursive: true, force: true });
+        fs.removeAllFiles(idList);
       } else {
         sendSignal(response, true);
         return;
