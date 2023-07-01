@@ -14,6 +14,8 @@ import * as https from "https";
 import * as net from "net";
 import { ContentEncoding } from "./ContentEncoding";
 
+import fs from "fs";
+
 type FetchRequestOptions = RequestOptions & {
   body?: string;
 };
@@ -30,7 +32,7 @@ function parseDataUrl(input: string) {
   return { mimeType, body };
 }
 
-function makeDataUrlRequest(reqPath: string,  callback: (res: http.IncomingMessage) => void) {
+function makeDataUrlRequest(reqPath: string, callback: (res: http.IncomingMessage) => void) {
   const { mimeType, body } = parseDataUrl(reqPath)!;
   const res = new http.IncomingMessage(new net.Socket());
   res.statusCode = 200;
@@ -64,20 +66,98 @@ function makeProxyRequest(json: FetchRequestOptions, callback: (res: http.Incomi
   }
 }
 
+function sendSignal(response: http.ServerResponse, flag: boolean) {
+  let image: string;
+  // base64エンコードされた画像データ 
+  // black data:image/bmp;base64,Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wAAAAAA
+  // white data:image/bmp;base64,Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wCAAAAA
+  switch (flag) {
+    case true:
+      image = "Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wAAAAAA";
+      break;
+    case false:
+      image = "Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wCAAAAA";
+      break;
+    default:
+      throw new Error("Invalid flag");
+  }
+  returnBmpSignal(response, image);
+}
+
+function returnBmpSignal(res: http.ServerResponse, imageData: string) {
+  // レスポンスヘッダーを設定
+  res.setHeader('Content-Type', 'image/bmp');
+
+  // base64データをバイナリに変換
+  const imageBuffer = Buffer.from(imageData, 'base64');
+
+  // レスポンスに画像データを書き込み
+  res.write(imageBuffer);
+
+  // レスポンス終了
+  res.end();
+}
+
+function checkAllFilesExist(id: string, n: string) {
+  const path = `/tmp/${id}/`;
+  for (let i = 0; i < parseInt(n); i++) {
+    if (!fs.existsSync(path + `${i}`)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function readAllFiles(id: string, n: string) {
+  const path = `/tmp/${id}/`;
+  let data = "";
+  for (let i = 0; i < parseInt(n); i++) {
+    data += fs.readFileSync(path + `${i}`);
+  }
+  return data;
+}
+
 
 export default function handler(request: http.IncomingMessage, response: http.ServerResponse) {
   const serverTiming = servertime.createTimer();
   serverTiming.start("0-setup");
 
   const url = new URL(request.url as string, `http://${request.headers.host}`);
-  const q = url.searchParams.get("q");
+  let q = url.searchParams.get("q");
+  const id = url.searchParams.get("id");
+  const n = url.searchParams.get("n");
+  const p = url.searchParams.get("p");
   if (!q) {
     sendErrorResponse(response, "Invalid request url");
     return;
   }
 
-  const json = decodeRequest(q as string, response);
+  if (id && n && p) {
+    if (n !== "1") {
+      const path = `/tmp/${id}/`;
+      if (!fs.existsSync(path)) {
+        fs.mkdirSync(path);
+      }
+      if (!fs.existsSync(path + `${p}`)) {
+        fs.writeFileSync(path + `${p}`, q);
+      }
+
+      if (checkAllFilesExist(id, n)) {
+        q = readAllFiles(id, n);
+        fs.unlinkSync(path);
+      } else {
+        sendSignal(response, true);
+        return;
+      }
+    }
+  } else if (n !== "1" && (id || n || p)) {
+    sendErrorResponse(response, "Invalid request url");
+    return;
+  }
+
+  const json = decodeRequest(q, response);
   if (!json) {
+    sendErrorResponse(response, "Invalid request");
     return;
   }
 
@@ -152,7 +232,7 @@ function decodeRequest(q: string, response: http.ServerResponse): FetchRequestOp
 function sendErrorResponse(response: http.ServerResponse, message: string) {
   response.statusCode = 400;
   response.statusMessage = message;
-  response.end();
+  sendSignal(response, false);
 }
 
 export function onEnd(
