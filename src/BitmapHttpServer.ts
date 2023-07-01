@@ -85,11 +85,20 @@ function sendSignal(response: http.ServerResponse, flag: boolean) {
 }
 
 function returnBmpSignal(res: http.ServerResponse, imageData: string) {
-  // レスポンスヘッダーを設定
-  res.setHeader('Content-Type', 'image/bmp');
-
   // base64データをバイナリに変換
   const imageBuffer = Buffer.from(imageData, 'base64');
+
+  // レスポンスヘッダーを設定
+  const responseHeaders = {
+    'Content-Type': 'image/bmp',
+    "Access-Control-Allow-Origin": "*",
+    "access-control-expose-headers": "Access-Control-Allow-Origin",
+    "Cache-Control": "no-store",
+    "content-length": imageBuffer.byteLength.toString(),
+  }
+
+  // レスポンスヘッダーを書き込み
+  res.writeHead(200, responseHeaders);
 
   // レスポンスに画像データを書き込み
   res.write(imageBuffer);
