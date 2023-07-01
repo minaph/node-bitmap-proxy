@@ -15,6 +15,13 @@ import * as net from "net";
 import { ContentEncoding } from "./ContentEncoding";
 
 import fs from "fs";
+import fsPromise from "fs/promises";
+
+import { Storage } from "@google-cloud/storage";
+const storage = new Storage();
+const bucket = storage.bucket('node-bitmap-proxy-yuki');
+
+const fileStrategy: "local" | "gcs" = "gcs";
 
 type FetchRequestOptions = RequestOptions & {
   body?: string;
@@ -107,27 +114,202 @@ function returnBmpSignal(res: http.ServerResponse, imageData: string) {
   res.end();
 }
 
-function checkAllFilesExist(id: string, n: string) {
-  const path = `/tmp/${id}/`;
-  for (let i = 0; i < parseInt(n); i++) {
-    if (!fs.existsSync(path + `${i}`)) {
-      return false;
-    }
-  }
-  return true;
+// function checkAllFilesExist(id: string, n: string) {
+//   const path = `/tmp/${id}/`;
+//   for (let i = 0; i < parseInt(n); i++) {
+//     if (!fs.existsSync(path + `${i}`)) {
+//       return false;
+//     }
+//   }
+//   return true;
+// }
+
+// function readAllFiles(id: string, n: string) {
+//   const path = `/tmp/${id}/`;
+//   let data = "";
+//   for (let i = 0; i < parseInt(n); i++) {
+//     data += fs.readFileSync(path + `${i}`);
+//   }
+//   return data;
+// }
+
+
+// export default function handler(request: http.IncomingMessage, response: http.ServerResponse) {
+//   const serverTiming = servertime.createTimer();
+//   serverTiming.start("0-setup");
+
+//   const url = new URL(request.url as string, `http://${request.headers.host}`);
+//   let q = url.searchParams.get("q");
+//   const id = url.searchParams.get("id");
+//   const n = url.searchParams.get("n");
+//   const p = url.searchParams.get("p");
+//   if (!q) {
+//     sendErrorResponse(response, "Invalid request url");
+//     return;
+//   }
+
+//   if (id && n && p) {
+//     if (n !== "1") {
+//       const path = `/tmp/${id}/`;
+//       if (!fs.existsSync(path)) {
+//         fs.mkdirSync(path);
+//       }
+//       if (!fs.existsSync(path + `${p}`)) {
+//         fs.writeFileSync(path + `${p}`, q);
+//       }
+
+//       if (checkAllFilesExist(id, n)) {
+//         q = readAllFiles(id, n);
+//         fs.rmSync(path, { recursive: true, force: true });
+//       } else {
+//         sendSignal(response, true);
+//         return;
+//       }
+//     }
+//   } else if (n !== "1" && (id || n || p)) {
+//     sendErrorResponse(response, "Invalid request url");
+//     return;
+//   }
+
+//   const json = decodeRequest(q, response);
+//   if (!json) {
+//     sendErrorResponse(response, "Invalid request");
+//     return;
+//   }
+
+//   const contentEncoding = ContentEncoding.fromRequest(request);
+
+//   serverTiming.end("0-setup");
+//   serverTiming.start("1-connect");
+
+//   const req = makeProxyRequest(json, (res) => {
+//     const { headers, statusCode, statusMessage } = res;
+//     let ttfb = false;
+//     const dataBuffer = [] as Buffer[];
+//     res.on("data", (data) => {
+//       if (!ttfb) {
+//         ttfb = true;
+//         serverTiming.end("2-request");
+//         serverTiming.start("3-download");
+//       }
+//       if (typeof data === "string") {
+//         dataBuffer.push(Buffer.from(data));
+//       } else {
+//         dataBuffer.push(data);
+//       }
+//     });
+
+//     res.on("end", () => {
+//       onEnd(
+//         response, serverTiming, contentEncoding, {
+//         headers: headers as JSONObject,
+//         status: statusCode || 200,
+//         statusText: statusMessage || "",
+//         body: Buffer.concat(dataBuffer)
+//       }, dataBuffer);
+//     });
+//   });
+
+//   req?.on("error", (e) => {
+//     console.error(e);
+//     sendErrorResponse(response, "Internal Server Error");
+//   });
+
+//   req?.on("socket", (socket) => {
+//     socket.on("connect", () => {
+//       onConnect(serverTiming);
+//     });
+//     if (!socket.connecting) {
+//       onConnect(serverTiming);
+//     }
+//   });
+
+//   if (json.body) {
+//     req?.write(base64UrlDecode(json.body));
+//   }
+//   req?.end();
+// }
+
+
+interface FileSystem {
+  isExists(fileId: string): Promise<boolean>;
+  validateFileId(fileId: string): Promise<boolean>;
+  writeFile(fileId: string, data: string): Promise<void>;
+  readFile(fileId: string): Promise<string>;
+  remove(fileId: string, options: { recursive: boolean; force: boolean }): Promise<void>;
 }
 
-function readAllFiles(id: string, n: string) {
-  const path = `/tmp/${id}/`;
-  let data = "";
-  for (let i = 0; i < parseInt(n); i++) {
-    data += fs.readFileSync(path + `${i}`);
-  }
-  return data;
+interface FSAdditionalUtil {
+  // ファイルの存在確認
+  isAllExists(fileIds: string[]): Promise<boolean>;
+  readAllFiles(fileIds: string[]): Promise<string>;
+  removeAllFiles(fileIds: string[]): Promise<void>;
 }
 
+class LocalFileSystem implements FileSystem, FSAdditionalUtil {
+  isExists(fileId: string) {
+    return Promise.resolve(fs.existsSync(fileId));
+  }
+  async validateFileId(fileId: string): Promise<boolean> {
+    return fsPromise.mkdir(fileId).then(() => true, () => false);
+  }
+  writeFile(fileId: string, data: string) {
+    fs.writeFileSync(fileId, data);
+    return Promise.resolve();
+  }
+  readFile(fileId: string) {
+    return Promise.resolve(fs.readFileSync(fileId).toString());
+  }
+  remove(fileId: string, options: { recursive: boolean; force: boolean }) {
+    return Promise.resolve(fs.rmSync(fileId, options));
+  }
 
-export default function handler(request: http.IncomingMessage, response: http.ServerResponse) {
+  isAllExists(fileIds: string[]) {
+    return Promise.resolve(fileIds.every((fileId) => this.isExists(fileId)));
+  }
+
+  readAllFiles(fileIds: string[]) {
+    return Promise.resolve(fileIds.map((fileId) => this.readFile(fileId)).join(""));
+  }
+
+  removeAllFiles(fileIds: string[]) {
+    return Promise.resolve(
+      fileIds.forEach((fileId) => this.remove(fileId, { recursive: true, force: true }))
+    );
+  }
+}
+
+class GoogleCloudStorage implements FileSystem, FSAdditionalUtil {
+  isExists(fileId: string) {
+    return bucket.file(fileId).exists().then((data) => data[0]);
+  }
+  async validateFileId(fileId: string): Promise<boolean> {
+    return Promise.resolve(true);
+  }
+  writeFile(fileId: string, data: string) {
+    return bucket.file(fileId).save(data);
+  }
+  async readFile(fileId: string): Promise<string> {
+    return (await bucket.file(fileId).download())[0].toString();
+  }
+  remove(fileId: string) {
+    return bucket.file(fileId).delete().then(() => undefined);
+  }
+
+  isAllExists(fileIds: string[]) {
+    return Promise.all(fileIds.map((fileId) => this.isExists(fileId))).then((data) => data.every((d) => d));
+  }
+
+  readAllFiles(fileIds: string[]) {
+    return Promise.all(fileIds.map((fileId) => this.readFile(fileId))).then(x => x.join(""));
+  }
+
+  removeAllFiles(fileIds: string[]) {
+    return Promise.all(fileIds.map((fileId) => this.remove(fileId))).then(() => undefined);
+  }
+}
+
+export default async function handler(request: http.IncomingMessage, response: http.ServerResponse) {
   const serverTiming = servertime.createTimer();
   serverTiming.start("0-setup");
 
@@ -141,19 +323,33 @@ export default function handler(request: http.IncomingMessage, response: http.Se
     return;
   }
 
+  let fs = null;
+  switch (fileStrategy) {
+    case "local":
+      fs = new LocalFileSystem();
+      break;
+    case "gcs":
+      fs = new GoogleCloudStorage();
+      break;
+    default:
+      sendErrorResponse(response, "Invalid file strategy");
+      return;
+  }
+
+  // ファイルシステムI/Oの処理を抽象化したインターフェースを使用して処理を行う
   if (id && n && p) {
     if (n !== "1") {
-      const path = `/tmp/${id}/`;
-      if (!fs.existsSync(path)) {
-        fs.mkdirSync(path);
+      const fileId = `/tmp/${id}/`;
+      const idList = [...Array(Number(n)).keys()].map((i) => fileId + `${i}`);
+      if (!(await fs.isExists(fileId))) {
+        fs.validateFileId(fileId);
       }
-      if (!fs.existsSync(path + `${p}`)) {
-        fs.writeFileSync(path + `${p}`, q);
+      if (!(await fs.isExists(fileId + `${p}`))) {
+        fs.writeFile(fileId + `${p}`, q);
       }
-
-      if (checkAllFilesExist(id, n)) {
-        q = readAllFiles(id, n);
-        fs.rmSync(path, { recursive: true, force: true });
+      if (await fs.isAllExists(idList)) {
+        q = await fs.readAllFiles(idList);
+        fs.remove(fileId, { recursive: true, force: true });
       } else {
         sendSignal(response, true);
         return;
@@ -222,7 +418,6 @@ export default function handler(request: http.IncomingMessage, response: http.Se
   }
   req?.end();
 }
-
 
 function decodeRequest(q: string, response: http.ServerResponse): FetchRequestOptions | null {
   try {
