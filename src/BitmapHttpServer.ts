@@ -345,7 +345,7 @@ export default async function handler(request: http.IncomingMessage, response: h
         fs.validateFileId(fileId);
       }
       if (!(await fs.isExists(fileId + `${p}`))) {
-        fs.writeFile(fileId + `${p}`, q);
+        await fs.writeFile(fileId + `${p}`, q);
       }
       if (await fs.isAllExists(idList)) {
         q = await fs.readAllFiles(idList);
