@@ -18,6 +18,7 @@
   "dependencies": {
     "@google-cloud/functions-framework": "^3.2.1",
     "@google-cloud/storage": "^6.11.0",
+    "@types/node": "^20.3.3",
     "@vercel/build-utils": "^4.1.0",
     "servertime": "^3.1.1"
   },

@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import { BinaryBuilder } from "./BinaryBuilder";
 
-export function fromBuffer(data: Buffer) {
+export function constructBmpFromBuffer(data: Buffer) {
   const width = 256;
   const height = Math.ceil((data.length + 1) / (width * 3));
   const space = width * height * 3 - data.length - 1;

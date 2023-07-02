@@ -1,22 +1,22 @@
-interface ProxyTargetResponse {
+interface BmpResponseContent {
   headers: JSONObject;
   status: number;
   statusText: string;
   body: Buffer;
 }
 
-type ProxyResponseHeader = {
+type BmpResponseHeader = {
   headers: JSONObject;
   status: number;
   statusText: string;
 };
 
-class ProxyResponse {
+class BmpResponse {
   headerLength: number;
-  header: ProxyResponseHeader;
+  header: BmpResponseHeader;
   private _header: Buffer;
   body: Buffer;
-  constructor({ headers, status, statusText, body }: ProxyTargetResponse) {
+  constructor({ headers, status, statusText, body }: BmpResponseContent) {
     this.header = {
       headers,
       status,
@@ -43,4 +43,4 @@ interface JSONObject {
 }
 interface JSONArray extends Array<JSONValue> {}
 
-export { ProxyTargetResponse, JSONValue, JSONObject, JSONArray, ProxyResponse };
+export { BmpResponseContent, JSONValue, JSONObject, JSONArray, BmpResponse };
