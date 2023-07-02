@@ -1,7 +1,9 @@
 import { server } from "./server/BmpHttpServer";
 import { proxyService } from "./app/proxyService";
+import { scrapingService } from "./app/ScrapingService";
 
-const handler = server(proxyService);
+const proxy = server(proxyService, "gcs");
+const scraping = server(scrapingService, "gcs");
 
-export { handler };
+export { proxy, scraping };
 
