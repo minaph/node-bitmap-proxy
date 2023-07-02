@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { ContentEncoding, Encodings } from "../src/ContentEncoding";
+import { ContentEncoding, Encodings } from "../src/server/ContentEncoding";
 import { deflateSync, gzipSync, brotliCompressSync } from "zlib";
 
 test("ContentEncoding.get returns 'identity' if Content-Encoding header is not present", () => {

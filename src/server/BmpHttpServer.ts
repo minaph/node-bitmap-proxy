@@ -13,16 +13,17 @@ import { ContentEncoding } from "./ContentEncoding";
 import { LocalFileSystem, GoogleCloudStorage, ServerFileSystem, FSAdditionalUtil } from "./FileSystem";
 
 
-const fileStrategy: "local" | "gcs" | "none" = "gcs";
-
 type BmpServerApplication = (
   request: string,
   callback: (content: BmpResponseContent) => void
 ) => Promise<void>;
 
+type FileStrategy = "local" | "gcs" | "none";
+
 
 function sendSignal(response: http.ServerResponse, flag: boolean) {
   let image: string;
+  
   // base64エンコードされた画像データ 
   // black data:image/bmp;base64,Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wAAAAAA
   // white data:image/bmp;base64,Qk1CAAAAAAAAAD4AAAAoAAAAAQAAAAEAAAABAAEAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///wCAAAAA
@@ -66,7 +67,7 @@ function returnBmpSignal(res: http.ServerResponse, imageData: string) {
 // ファイルシステムI/Oの処理を抽象化したインターフェースを使用して処理を行う
 // ページネーションへの対応
 
-async function processPagination(response: http.ServerResponse, url: URL): Promise<string | null> {
+async function processPagination(response: http.ServerResponse, url: URL, fileStrategy: FileStrategy): Promise<string | null> {
   const id = url.searchParams.get("id");
   const n = url.searchParams.get("n");
   const p = url.searchParams.get("p");
@@ -123,12 +124,11 @@ async function processPagination(response: http.ServerResponse, url: URL): Promi
   throw new Error("Invalid request url");
 }
 
-
-export function server(internalApplication: BmpServerApplication) {
+export function server(internalApplication: BmpServerApplication, fileStrategy: FileStrategy) {
 
   const ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ = servertime.createTimer();
 
-  function onEnd(
+  function sendBmpResponse(
     response: http.ServerResponse,
     encoding: ContentEncoding,
     buffer: Buffer
@@ -180,7 +180,7 @@ export function server(internalApplication: BmpServerApplication) {
 
     const contentEncoding = ContentEncoding.fromRequest(request);
 
-    const q = await processPagination(response, url);
+    const q = await processPagination(response, url, fileStrategy);
     if (!q) {
       return;
     }
@@ -190,12 +190,6 @@ export function server(internalApplication: BmpServerApplication) {
     ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ.end("0-setup");
     ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ.start("1-application");
 
-    // [ ] server timing api 整理
-    // serverTiming.end("2-request");
-    // serverTiming.start("3-download");
-    // serverTiming.end("1-connect");
-    // serverTiming.start("2-request");
-
     try {
       internalApplication(decodedQuery, (content) => {
 
@@ -203,7 +197,7 @@ export function server(internalApplication: BmpServerApplication) {
         ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ.start("2-build");
 
         const binary = new BmpResponse(content).toBuffer();
-        onEnd(response, contentEncoding, binary);
+        sendBmpResponse(response, contentEncoding, binary);
       })
     } catch (error) {
       let message = "Application Error: ";

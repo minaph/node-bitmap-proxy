@@ -8,7 +8,7 @@
  * @module ContentEncodingTest
  */
 
-import { BinaryBuilder } from '../src/BinaryBuilder';
+import { BinaryBuilder } from '../src/core/BinaryBuilder';
 import { expect, test, vi, assert } from "vitest"
 
 

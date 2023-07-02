@@ -20,7 +20,7 @@ function parseDataUrl(input: string) {
   return { mimeType, body };
 }
 
-function makeDataUrlRequest(reqPath: string, callback: (res: http.IncomingMessage) => void) {
+export function makeDataUrlRequest(reqPath: string, callback: (res: http.IncomingMessage) => void) {
   const { mimeType, body } = parseDataUrl(reqPath)!;
   const res = new http.IncomingMessage(new net.Socket());
   res.statusCode = 200;
@@ -63,12 +63,8 @@ export async function proxyService(request: string, callback: (content: BmpRespo
 
   const proxyRequest = makeProxyRequest(parsedRequestOptions, (res) => {
     const { headers, statusCode, statusMessage } = res;
-    let ttfb = false;
     const dataBuffer = [] as Buffer[];
     res.on("data", (data) => {
-      if (!ttfb) {
-        ttfb = true;
-      }
       if (typeof data === "string") {
         dataBuffer.push(Buffer.from(data));
       } else {
