@@ -84,6 +84,7 @@ export async function proxyService(request: string, callback: (content: BmpRespo
   });
 
   proxyRequest?.on("error", (e) => {
+    console.error(e);
     throw e
   });
 

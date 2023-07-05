@@ -107,7 +107,14 @@ async function processPagination(response: http.ServerResponse, url: URL, fileSt
         await fs.writeFile(fileId + `${p}`, q);
       }
       if (await fs.isAllExists(idList)) {
-        targetQuery = await fs.readAllFiles(idList);
+        targetQuery = await fs.readAllFiles(idList).catch((e) => {
+          if (fileStrategy === "gcs") {
+            // retry once
+            return fs!.readAllFiles(idList)
+          }
+          console.error(e);
+          throw e;
+        });
         fs.removeAllFiles(idList);
         return targetQuery;
       } else {
@@ -117,12 +124,11 @@ async function processPagination(response: http.ServerResponse, url: URL, fileSt
     }
     return q;
   } else if (n !== "1" && (id || n || p)) {
-    sendErrorResponse(response, "Invalid request url");
+    sendErrorResponse(response, "Invalid request url: " + url.toString());
     return null;
   } else {
     return q;
   }
-  throw new Error("Invalid request url");
 }
 
 export function server(internalApplication: BmpServerApplication, fileStrategy: FileStrategy) {
