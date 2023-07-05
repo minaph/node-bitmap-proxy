@@ -115,7 +115,7 @@ async function processPagination(response: http.ServerResponse, url: URL, fileSt
           console.error(e);
           throw e;
         });
-        fs.removeAllFiles(idList);
+        // fs.removeAllFiles(idList);
         return targetQuery;
       } else {
         sendSignal(response, true);
