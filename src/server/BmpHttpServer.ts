@@ -115,6 +115,7 @@ async function processPagination(response: http.ServerResponse, url: URL, fileSt
         return null;
       }
     }
+    return q;
   } else if (n !== "1" && (id || n || p)) {
     sendErrorResponse(response, "Invalid request url");
     return null;
