@@ -25,7 +25,7 @@
   "scripts": {
     "test": "vitest",
     "gcp-build": "tsc -P tsconfig.cloud-functions.json",
-    "start": "tsc -P tsconfig.local.json && node ./localserver.js",
+    "start": "tsc -P tsconfig.local.json && node ./local/src/app/localServer.js",
     "vercel-build": "yes | cp -rf tsconfig.vercel.json tsconfig.json && tsc",
     "pull:subtree": "git subtree pull --prefix bitmap-fetch userscripts bitmap-fetch --squash"
   },
