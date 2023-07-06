@@ -18,13 +18,16 @@
   "dependencies": {
     "@google-cloud/functions-framework": "^3.2.1",
     "@google-cloud/storage": "^6.11.0",
+    "@types/follow-redirects": "^1.14.1",
     "@types/node": "^20.3.3",
     "@vercel/build-utils": "^4.1.0",
+    "follow-redirects": "^1.15.2",
+    "google-cloud-storage": "^2.0.2",
     "servertime": "^3.1.1"
   },
   "scripts": {
     "test": "vitest",
-    "gcp-build": "tsc -P tsconfig.cloud-functions.json",
+    "gcp-build": "yarn && tsc -P tsconfig.cloud-functions.json",
     "start": "tsc -P tsconfig.local.json && node ./local/src/app/localServer.js",
     "vercel-build": "yes | cp -rf tsconfig.vercel.json tsconfig.json && tsc",
     "pull:subtree": "git subtree pull --prefix bitmap-fetch userscripts bitmap-fetch --squash"
