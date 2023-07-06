@@ -1,6 +1,8 @@
 import { base64UrlDecode } from "../../bitmap-fetch/base64UrlDecode";
 import { JSONObject, BmpResponseContent } from "../server/BmpResponse";
-import { http, https } from "follow-redirects";
+// import { http, https } from "follow-redirects";
+import * as http from "http";
+import * as https from "https";
 import type * as httpType from "http";
 import * as net from "net";
 

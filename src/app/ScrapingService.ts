@@ -1,6 +1,6 @@
-// import * as http from "http";
-// import * as https from "https";
-import { http, https } from "follow-redirects";
+import * as http from "http";
+import * as https from "https";
+// import { http, https } from "follow-redirects";
 import { BmpResponseContent } from "../server/BmpResponse";
 import { URL } from "url";
 
@@ -28,8 +28,8 @@ function webRequest(url: string) {
   return new Promise<string>((resolve, reject) => {
     const req = (url.startsWith("https") ? https : http).get({
       timeout: 5000,
-      maxRedirects: 10,
-      maxBodyLength: 100 * 1024 * 1024,
+      // maxRedirects: 10,
+      // maxBodyLength: 100 * 1024 * 1024,
       ...new URL(url)
     }, (res) => {
       const dataBuffer = [] as Buffer[];
