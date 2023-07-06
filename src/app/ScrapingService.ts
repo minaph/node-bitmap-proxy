@@ -13,7 +13,8 @@ export async function scrapingService(request: string, callback: (content: BmpRe
     try {
       content = await webRequest(url);
     } catch (e) {
-      content = e?.toString();
+      content = e?.toString() || "Unknown error";
+      console.warn(e);
     }
     contentList.push({
       url,
