@@ -10,7 +10,11 @@ export async function scrapingService(request: string, callback: (content: BmpRe
   const contentList: { url: string, content: string }[] = [];
   for (const url of urls) {
     let content = "";
-    content = await webRequest(url);
+    try {
+      content = await webRequest(url);
+    } catch (e) {
+      content = e?.toString();
+    }
     contentList.push({
       url,
       content
