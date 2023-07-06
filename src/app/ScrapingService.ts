@@ -32,7 +32,9 @@ export async function scrapingService(request: string, callback: (content: BmpRe
 
 function webRequest(url: string) {
   return new Promise<string>((resolve, reject) => {
-    (url.startsWith("https") ? https : http).get(url, (res) => {
+    const req = (url.startsWith("https") ? https : http).get({
+      timeout: 5000,
+    }, (res) => {
       const dataBuffer = [] as Buffer[];
 
       res.on("data", (data) => {
@@ -46,8 +48,13 @@ function webRequest(url: string) {
       res.on("end", () => {
         resolve(Buffer.concat(dataBuffer).toString());
       });
-    }).on("error", (e) => {
+    })
+    req.on("error", (e) => {
       reject(e);
-    });
+    })
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("timeout"));
+    })
   });
 }
