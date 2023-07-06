@@ -2,7 +2,6 @@ import { base64UrlDecode } from "../../bitmap-fetch/base64UrlDecode";
 import { JSONObject, BmpResponseContent } from "../server/BmpResponse";
 import { http, https } from "follow-redirects";
 import type * as httpType from "http";
-import type * as httpsType from "https";
 import * as net from "net";
 
 type FetchRequestOptions = httpType.RequestOptions & {
@@ -42,6 +41,7 @@ export function makeProxyRequest(json: FetchRequestOptions, callback: (res: http
     path: json.path,
     method: json.method || "GET",
     headers: json.headers,
+    maxBodyLength: 300 * 1024 * 1024
   };
   if (json.protocol === "data:") {
     if (!json.path) {

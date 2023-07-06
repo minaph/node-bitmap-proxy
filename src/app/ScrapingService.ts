@@ -29,6 +29,7 @@ function webRequest(url: string) {
     const req = (url.startsWith("https") ? https : http).get({
       timeout: 5000,
       maxRedirects: 10,
+      maxBodyLength: 100 * 1024 * 1024,
       ...new URL(url)
     }, (res) => {
       const dataBuffer = [] as Buffer[];
