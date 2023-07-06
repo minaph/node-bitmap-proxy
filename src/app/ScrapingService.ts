@@ -1,15 +1,9 @@
-import * as http from "http";
-import * as https from "https";
-import { JSONObject, BmpResponseContent } from "../server/BmpResponse";
+// import * as http from "http";
+// import * as https from "https";
+import { http, https } from "follow-redirects";
+import { BmpResponseContent } from "../server/BmpResponse";
+import { URL } from "url";
 
-/* 
-interface BmpResponseContent {
-  headers: JSONObject;
-  status: number;
-  statusText: string;
-  body: Buffer;
-}
- */
 
 export async function scrapingService(request: string, callback: (content: BmpResponseContent) => void) {
   const urls = request.split(" ");
@@ -34,6 +28,8 @@ function webRequest(url: string) {
   return new Promise<string>((resolve, reject) => {
     const req = (url.startsWith("https") ? https : http).get({
       timeout: 5000,
+      maxRedirects: 10,
+      ...new URL(url)
     }, (res) => {
       const dataBuffer = [] as Buffer[];
 

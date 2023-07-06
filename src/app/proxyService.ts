@@ -1,10 +1,11 @@
 import { base64UrlDecode } from "../../bitmap-fetch/base64UrlDecode";
 import { JSONObject, BmpResponseContent } from "../server/BmpResponse";
-import * as http from "http";
-import * as https from "https";
+import { http, https } from "follow-redirects";
+import type * as httpType from "http";
+import type * as httpsType from "https";
 import * as net from "net";
 
-type FetchRequestOptions = http.RequestOptions & {
+type FetchRequestOptions = httpType.RequestOptions & {
   body?: string;
 };
 
@@ -20,7 +21,7 @@ function parseDataUrl(input: string) {
   return { mimeType, body };
 }
 
-export function makeDataUrlRequest(reqPath: string, callback: (res: http.IncomingMessage) => void) {
+export function makeDataUrlRequest(reqPath: string, callback: (res: httpType.IncomingMessage) => void) {
   const { mimeType, body } = parseDataUrl(reqPath)!;
   const res = new http.IncomingMessage(new net.Socket());
   res.statusCode = 200;
@@ -34,7 +35,7 @@ export function makeDataUrlRequest(reqPath: string, callback: (res: http.Incomin
   res.push(null);
 }
 
-export function makeProxyRequest(json: FetchRequestOptions, callback: (res: http.IncomingMessage) => void) {
+export function makeProxyRequest(json: FetchRequestOptions, callback: (res: httpType.IncomingMessage) => void) {
   const options = {
     hostname: json.hostname,
     port: json.port || (json.protocol === "https:" ? 443 : 80),
