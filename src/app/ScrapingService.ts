@@ -25,13 +25,9 @@ export async function scrapingService(request: string, callback: (content: BmpRe
 }
 
 function webRequest(url: string) {
+  const TIMEOUT: number = 5000;
   return new Promise<string>((resolve, reject) => {
-    const req = (url.startsWith("https") ? https : http).get({
-      timeout: 5000,
-      // maxRedirects: 10,
-      // maxBodyLength: 100 * 1024 * 1024,
-      ...new URL(url)
-    }, (res) => {
+    const req = (url.startsWith("https") ? https : http).get(url, (res) => {
       const dataBuffer = [] as Buffer[];
 
       res.on("data", (data) => {
@@ -45,13 +41,17 @@ function webRequest(url: string) {
       res.on("end", () => {
         resolve(Buffer.concat(dataBuffer).toString());
       });
-    })
+    });
+
     req.on("error", (e) => {
       reject(e);
-    })
+    });
+
     req.on("timeout", () => {
       req.destroy();
       reject(new Error("timeout"));
-    })
+    });
+
+    req.setTimeout(TIMEOUT);
   });
 }

@@ -43,7 +43,7 @@ export function makeProxyRequest(json: FetchRequestOptions, callback: (res: http
     path: json.path,
     method: json.method || "GET",
     headers: json.headers,
-    maxBodyLength: 300 * 1024 * 1024
+    // maxBodyLength: 300 * 1024 * 1024
   };
   if (json.protocol === "data:") {
     if (!json.path) {
